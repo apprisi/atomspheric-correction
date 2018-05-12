@@ -2,8 +2,10 @@
 import os
 import time
 import glob
+import json
 import shutil
 import subprocess
+from joblib import Parallel,delayed
 
 def atomCorrectPre(data_path, result_root):
     """
@@ -48,12 +50,12 @@ def atomCorrectPre(data_path, result_root):
             tif_list   = glob.glob(os.path.join(data_path, '*.TIF'))
 
             for txt in txt_list:
-                txt_dir, txt_name = os.path.split(txt)
+                _, txt_name = os.path.split(txt)
                 shutil.copyfile(txt, os.path.join(result_path, txt_name))
 
             for tif in tif_list:
                 start = time.time()
-                tif_dir, tif_name = os.path.split(tif)
+                _, tif_name = os.path.split(tif)
                 ret1     = subprocess.run(['gdal_translate', '-co', 'TILED=NO', tif, os.path.join(result_path, tif_name)])
                 end      = time.time()
                 print("%s executed using time %.2f seconds" % (ret1.args, (end - start)))
@@ -67,7 +69,7 @@ def atomCorrectPre(data_path, result_root):
             for imd in IMD_list:
                 os.remove(imd)
             print(imd + " file is deleted!")
-            return result_path
+    return result_path
 
 
 def atomCorrectProcess(data_path):
@@ -92,9 +94,8 @@ def atomCorrectProcess(data_path):
     else:
         print("Converting the data.......\n")
 
-        mtl_txt = os.path.split(data_path)[-1] + "_MTL.txt" # creat MTL filename
         os.chdir(data_path)  # change the directory
-
+        mtl_txt = glob.glob('*_MTL.txt')[0] # find MTL filename
         start = time.time()
         ret1 = subprocess.run(['convert_lpgs_to_espa', '--mtl', mtl_txt])
         end = time.time()
@@ -105,7 +106,7 @@ def atomCorrectProcess(data_path):
         else:
             print("%s data format conversion completed!" % mtl_txt)
 
-            mtl_xml = os.path.split(data_path)[-1] + ".xml"  # atomospheric
+            mtl_xml = glob.glob('*.xml')[0]  # atomospheric
             if ('LC08' in mtl_xml):
                 start = time.time()
                 ret2 = subprocess.run(['do_lasrc.py', '--xml', mtl_xml])
@@ -154,15 +155,20 @@ def atomCorrectPost(result_path):
         return -1
     else:
         print("deleted the data.......\n")
+        
+        os.chdir(result_path)
+        if 'LC08' in result_path:
+            tif_list = glob.glob('*_B*.TIF')
+            img_list = glob.glob(os.path.join(result_path, '*_b[1-9]*'))
+            toa_list = glob.glob(os.path.join(result_path, '*_toa_*'))
+            for deleted_list in tif_list + img_list + toa_list:
+                if os.path.exists(deleted_list):	            
+                    os.remove(deleted_list)
+                else:
+                    print("no such file:%s" % deleted_list)
+        elif 'LE07' in result_path:
+            tif_list = glob.glob(os.path.join(result_path, '*_B*.TIF'))
 
-        tif_list = glob.glob(os.path.join(result_path, '*_B*.TIF'))
-        img_list = glob.glob(os.path.join(result_path, '*_b[1-9]*'))
-        toa_list = glob.glob(os.path.join(result_path, '*_toa_*'))
-        for deleted_list in tif_list + img_list + toa_list:
-            if os.path.exists(deleted_list):	            
-                os.remove(deleted_list)
-            else:
-                print("no such file:%s" % deleted_list)
     return 0 
 
 def batch_process(data_path, result_root):
@@ -171,22 +177,19 @@ def batch_process(data_path, result_root):
              batch process the atomspheric correction
 
     input:
-        data_path: whre is the data such as 
-        */landsat_sr/LE07/01/010/028/LE07_L1GT_010028_20040503_20160926_01_T2
+         data_path: whre is the data such as 
+         */landsat_sr/LE07/01/010/028/LE07_L1GT_010028_20040503_20160926_01_T2
 
     output:
-        return 0, process sucess--
-        return 1, data not exists--
+         return 0, process sucess
+         return 1, process failed
     """
-
-
-
-    start = time.time()
-    
+   
     # atomspheric correct preprocess 
     flag = atomCorrectPre(data_path, result_root)
     if flag == -1:
         print(data_path + " preprocess failed!")
+        return 1
     else:
 
 	# atomspheric correct process
@@ -198,34 +201,39 @@ def batch_process(data_path, result_root):
             flag2 = atomCorrectPost(flag)
             if flag2 == 0:
                 print(flag + "Atomspheric correction is OK!")
+                return 0
             else:
                 print(flag + "Delete data exception!")
-
+                return 1
         else:
             print(flag + "Atomspheric correction is failure!")
-    end = time.time()
-    print("Task runs %0.2f seconds" % (end - start))
-
+            return 1
 
 if __name__ == '__main__':
-   
-    data_path = r'/home/jason/tq-data01/landsat/LE07/01/123/033/LE07_L1TP_123033_20170616_20170712_01_T1'
-    result_root = r'/home/jason/data_pool/test_data/landsat_sr' 
+    
     start = time.time()
-    flag = atomCorrectPre(data_path, result_root)
-    if flag == -1:
-        print(data_path + " preprocess failed!")
+
+    # creat the result path
+    result_root = r'/home/jason/tq-data03/landsat_sr'
+    if os.path.exists(result_root):
+        print("%s result root is ok." % result_root)
     else:
-        flag1 = atomCorrectProcess(flag)
-        if flag1 == 0:
-            print(flag + "Atomspheric correction is successful!")
-            flag2 = atomCorrectPost(flag)
-            if flag2 == 0:
-                print(flag + "Atomspheric correction is OK!")
-            else:
-                print(flag + "Delete data exception!")
-        else:
-            print(flag + "Atomspheric correction is failure!")
+        os.makedirs(result_root)
+
+    # load the scence of path
+    with open(r'/home/jason/data_pool/2017-le07.json', 'r') as fp:
+        process_dict = json.load(fp)
+    
+    # process the data
+    Parallel(n_jobs=3)(delayed(batch_process)(os.path.join(r'/home/jason', data_path['relative_path']),result_root) for data_path in process_dict['scenes'])
+    # for index in range(3): #len(process_dict['scenes'])
+    #     data_path = process_dict['scenes'][index]['relative_path']
+    #     process_path = os.path.join(r'/home/jason', data_path)
+    #     flag = batch_process(process_path, result_root)
+    #     if flag == 1:
+    #         print("%s sences atomsphere maybe fail" % data_path)
+    #         continue
+    #     else:
+    #         print("%s sences atomsphere process successfully." % data_path)
     end = time.time()
     print("Task runs %0.2f seconds" % (end - start))
-

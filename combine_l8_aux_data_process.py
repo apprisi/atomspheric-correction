@@ -2,6 +2,7 @@
 import os
 import time
 import glob
+import re
 import subprocess
 
 
@@ -34,8 +35,6 @@ def combineL8AuxDataProcess(data_path, output_dir):
         return -1
     else:
         print("Combine L8 auxiliary data.......\n")
-
-        o_dir = output_dir
         terra_cma = glob.glob(os.path.join(data_path, 'MOD09CMA', '*', '*', '*'))
         terra_cma.sort()
         terra_cmg = glob.glob(os.path.join(data_path, 'MOD09CMG', '*', '*', '*'))
@@ -44,24 +43,31 @@ def combineL8AuxDataProcess(data_path, output_dir):
         aqua_cma.sort()
         aqua_cmg = glob.glob(os.path.join(data_path, 'MYD09CMG', '*', '*', '*'))
         aqua_cmg.sort()
-        for t_cma, t_cmg, a_cma, a_cmg in zip(terra_cma[0:100], terra_cmg[0:100], aqua_cma[0:100], aqua_cmg[0:100]):
+        for t_cma, t_cmg, a_cma, a_cmg in zip(terra_cma, terra_cmg, aqua_cma, aqua_cmg):
             start = time.time()
-            ret1 = subprocess.run(['combine_l8_aux_data', '--terra_cma', t_cma,
-                                   '--terra_cmg', t_cmg, '--aqua_cma', a_cma,
-                                   '--aqua_cmg',a_cmg,'--output_dir', o_dir,
-                                   '--verbose'])
-            if (ret1.returncode != 0):
-                print("%s\n%s\n%s\n%s\n Data conbine failed!" % (t_cma, t_cmg,
-                      a_cma, a_cmg))
+            doy   = re.findall(r"\d\d\d+", t_cma)
+            result_file = os.path.join(output_dir, doy[0], 'L8ANC' + doy[2] + '.hdf_fused')
+            if os.path.exists(result_file):
+                print(result_file + " has processed! it no need to process again.")
+                continue
             else:
-                print("%s\n%s\n%s\n%s\n Data conbine completed!" % (t_cma, t_cmg,
-                      a_cma, a_cmg))
-            end = time.time()
-            print("%s executed using time %.2f seconds" % (ret1.args, (end - start)))
+                [o_dir, _] = os.path.split(result_file)
+                ret1  = subprocess.run(['combine_l8_aux_data', '--terra_cma', t_cma,
+                                    '--terra_cmg', t_cmg, '--aqua_cma', a_cma,
+                                    '--aqua_cmg',a_cmg,'--output_dir', o_dir,
+                                    '--verbose'])
+                if (ret1.returncode != 0):
+                    print("%s\n%s\n%s\n%s\n Data conbine failed!" % (t_cma, t_cmg,
+                        a_cma, a_cmg))
+                else:
+                    print("%s\n%s\n%s\n%s\n Data conbine completed!" % (t_cma, t_cmg,
+                        a_cma, a_cmg))
+                end = time.time()
+                print("%s executed using time %.2f seconds" % (ret1.args, (end - start)))
 
 if __name__ == '__main__':
     data_path = r'/home/jason/data_pool/modis'
-    output_dir = r'/home/jason/data_pool/lasrc_aux/LADS/combine_result'
+    output_dir = r'/home/jason/data_pool/lasrc_aux/LADS'
     start = time.time()
     flags = combineL8AuxDataProcess(data_path, output_dir)
     print("Process status:%s" % flags)
