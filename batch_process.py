@@ -159,15 +159,25 @@ def atomCorrectPost(result_path):
         os.chdir(result_path)
         if 'LC08' in result_path:
             tif_list = glob.glob('*_B*.TIF')
-            img_list = glob.glob(os.path.join(result_path, '*_b[1-9]*'))
-            toa_list = glob.glob(os.path.join(result_path, '*_toa_*'))
+            img_list = glob.glob('*_b[1-9]*')
+            toa_list = glob.glob('*_toa_*')
             for deleted_list in tif_list + img_list + toa_list:
                 if os.path.exists(deleted_list):	            
                     os.remove(deleted_list)
                 else:
                     print("no such file:%s" % deleted_list)
-        elif 'LE07' in result_path:
-            tif_list = glob.glob(os.path.join(result_path, '*_B*.TIF'))
+        elif 'LE07' or 'LT05' in result_path:
+            tif_list = glob.glob('*_B*.TIF')
+            img_list = glob.glob('*_b[1-9]*')
+            toa_list = glob.glob('*_toa_*')
+            txt_list = glob.glob('ln*.txt')
+            for deleted_list in tif_list + img_list + toa_list + txt_list:
+                if os.path.exists(deleted_list):	            
+                    os.remove(deleted_list)
+                else:
+                    print("no such file:%s" % deleted_list)
+        else:
+            print(result_path + "no file neesd to remove!")
 
     return 0 
 

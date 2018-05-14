@@ -3,7 +3,7 @@ import os
 import time
 import glob
 import subprocess
-
+from joblib import Parallel,delayed
 
 def atomCorrectPost(result_path):
     """
@@ -27,25 +27,41 @@ def atomCorrectPost(result_path):
         return -1
     else:
         print("deleted the data.......\n")
+        os.chdir(result_path)
 
-        tif_list = glob.glob(os.path.join(result_path, '*_B*.TIF'))
-        img_list = glob.glob(os.path.join(result_path, '*_b[1-9]*'))
-        toa_list = glob.glob(os.path.join(result_path, '*_toa_*'))
+    if 'LC08' in result_path:
+        tif_list = glob.glob('*_B*.TIF')
+        img_list = glob.glob('*_b[1-9]*')
+        toa_list = glob.glob('*_toa_*')
         for deleted_list in tif_list + img_list + toa_list:
             if os.path.exists(deleted_list):	            
                 os.remove(deleted_list)
             else:
                 print("no such file:%s" % deleted_list)
+    elif 'LE07' or 'LT05' in result_path:
+        tif_list = glob.glob('*_B*.TIF')
+        img_list = glob.glob('*_b[1-9]*')
+        toa_list = glob.glob('*_toa_*')
+        txt_list = glob.glob('ln*.txt')
+        for deleted_list in tif_list + img_list + toa_list + txt_list:
+            if os.path.exists(deleted_list):	            
+                os.remove(deleted_list)
+            else:
+                print("no such file:%s" % deleted_list)
+    else:
+        print(result_path + "no file neesd to remove!")
     return 0 
         
 
 if __name__ == '__main__':
+    # remove the file  
+    test_path = glob.glob(r'/home/jason/tq-data03/landsat_sr/*/*/*')
+    Parallel(n_jobs=5)(delayed(atomCorrectPost)(tmp_path) for tmp_path in test_path)
 
-    test_path = r'/home/jason/data_pool/test_data/landsat_sr/LC08/01/013/027/LC08_L1GT_013027_20161008_20170220_01_T2'
- 
+"""
     start = time.time()
     flags = atomCorrectPost(test_path)
     print("Process status:%s" % flags)
     end = time.time()
     print("Task runs %0.2f seconds" % (end - start))
-
+"""
