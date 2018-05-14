@@ -25,6 +25,7 @@ def atomCorrectPre(data_path, result_root):
     output:
         process sucess, and return the result path
         return -1, data path not exists or data path exists maybe has been processed
+        return 0, data  has been processed
     """
 
     if not os.path.exists(data_path):
@@ -34,7 +35,13 @@ def atomCorrectPre(data_path, result_root):
         print("%s is not a file directory" % data_path)
         return -1
     else:
-        print("preprocess the data.......\n")
+        print("Preprocess the data: %s\n" % data_path)
+
+        # find the process status if finished, it can skip
+        file_name = data_path.split('landsat')[-1]
+        if file_name in sr_status['sence_sr_status']['sucess'] or sr_status['sence_sr_status']['fail']:
+            print(data_path + "has been processed!")
+            return 0
 
         os.chdir(data_path)  # change the directory
 
@@ -44,38 +51,38 @@ def atomCorrectPre(data_path, result_root):
                            path_list[-1]) # 'LE07', '01', 'path' ,'row', 'name'
         result_path = os.path.join(result_root, tmp_path)
         if os.path.exists(result_path):
-            print("Folder is exist and it maybe has been processed!")
-            sr_status['sence_sr_status']['sucess'].append(result_path)
-            return -1
+            print("Folder is exist and it maybe has been processed!")          
         else:
             os.makedirs(result_path)
             print("Creat folder is ok!")
 
-            # copy the txt to result path and convert the TIFF
-            txt_list    = glob.glob(os.path.join(data_path, '*.txt'))
-            tif_list   = glob.glob(os.path.join(data_path, '*.TIF'))
+        # copy the txt to result path and convert the TIFF
+        txt_list = glob.glob('*.txt')
+        
+        print(txt_list)
+        for txt in txt_list:
+            print(txt)
+            _, txt_name = os.path.split(txt)
+            shutil.copyfile(txt, os.path.join(result_path, txt_name))
+            
+        tif_list   = glob.glob(os.path.join(data_path, '*.TIF'))
+        for tif in tif_list:
+            start = time.time()
+            _, tif_name = os.path.split(tif)
+            ret1     = subprocess.run(['gdal_translate', '-co', 'TILED=NO', tif, os.path.join(result_path, tif_name)])
+            end      = time.time()
+            print("%s executed using time %.2f seconds" % (ret1.args, (end - start)))
+            if (ret1.returncode == 0):
+                print("%s conversion finished!" % tif)
+            else:
+                print("%s conversion failed!" % tif)
 
-            for txt in txt_list:
-                _, txt_name = os.path.split(txt)
-                shutil.copyfile(txt, os.path.join(result_path, txt_name))
-
-            for tif in tif_list:
-                start = time.time()
-                _, tif_name = os.path.split(tif)
-                ret1     = subprocess.run(['gdal_translate', '-co', 'TILED=NO', tif, os.path.join(result_path, tif_name)])
-                end      = time.time()
-                print("%s executed using time %.2f seconds" % (ret1.args, (end - start)))
-                if (ret1.returncode == 0):
-                    print("%s conversion finished!" % tif)
-                else:
-                   print("%s conversion failed!" % tif)
-
-            os.chdir(result_path)  # change the directory, remove the IMD file
-            IMD_list    = glob.glob(os.path.join(result_path, '*.IMD'))
-            for imd in IMD_list:
-                os.remove(imd)
-            print(imd + " file is deleted!")
-            sr_status['sence_sr_status']['sucess'].append(result_path)
+        # change the directory, remove the IMD file
+        os.chdir(result_path)  
+        IMD_list    = glob.glob('*.IMD')
+        for imd in IMD_list:
+            os.remove(imd)
+        print(imd + " file is deleted!")
     return result_path
 
 
@@ -102,18 +109,19 @@ def atomCorrectProcess(data_path):
         print("Converting the data.......\n")
 
         os.chdir(data_path)  # change the directory
-        mtl_txt = glob.glob('*_MTL.txt')[0] # find MTL filename
+        mtl_txt = glob.glob(os.path.join(data_path, '*_MTL.txt'))[0] # find MTL filename
         start = time.time()
         ret1 = subprocess.run(['convert_lpgs_to_espa', '--mtl', mtl_txt])
         end = time.time()
         print("%s executed using time %.2f seconds" % (ret1.args, (end - start)))
         if (ret1.returncode != 0):
             print("%s data format conversion failed!" % mtl_txt)
+            sr_status['sence_sr_status']['fail'].append(data_path.split('landsat_sr')[-1])
             return 1
         else:
             print("%s data format conversion completed!" % mtl_txt)
 
-            mtl_xml = glob.glob('*.xml')[0]  # atomospheric
+            mtl_xml = glob.glob(os.path.join(data_path,'*.xml'))[0] # atomospheric
             if ('LC08' in mtl_xml):
                 start = time.time()
                 ret2 = subprocess.run(['do_lasrc.py', '--xml', mtl_xml])
@@ -121,17 +129,11 @@ def atomCorrectProcess(data_path):
                 print("%s executed using time %.2f seconds" % (ret2.args, (end - start)))
                 if (ret2.returncode == 0):
                     print("%s data atomospheric correction finished!" % mtl_xml)
-                    if data_path in sr_status['sence_sr_status']['sucess']:
-                        print(data_path + 'processing status has update')
-                    else:
-                        sr_status['sence_sr_status']['sucess'].append(data_path)
+                    sr_status['sence_sr_status']['sucess'].append(data_path.split('landsat_sr')[-1]) # update the status
                     return 0
                 else:
+                    sr_status['sence_sr_status']['fail'].append(data_path.split('landsat_sr')[-1]) # update the status
                     print("%s data atomospheric correction failure!" % mtl_xml)
-                    if data_path in sr_status['sence_sr_status']['fail']:
-                        print(data_path + 'processing status has update')
-                    else:
-                        sr_status['sence_sr_status']['fail'].append(data_path)
                     return 1
             if ('LE07' or 'LT05' in mtl_xml):
                 start = time.time()
@@ -139,18 +141,12 @@ def atomCorrectProcess(data_path):
                 end = time.time()
                 print("%s executed using time %.2f seconds" % (ret2.args, (end - start)))
                 if (ret2.returncode == 0):
+                    sr_status['sence_sr_status']['sucess'].append(data_path.split('landsat_sr')[-1])  # update the status
                     print("%s data atomospheric correction finished!" % mtl_xml)
-                    if data_path in sr_status['sence_sr_status']['sucess']:
-                        print(data_path + 'processing status has update')
-                    else:
-                        sr_status['sence_sr_status']['sucess'].append(data_path)
                     return 0
                 else:
+                    sr_status['sence_sr_status']['fail'].append(data_path.split('landsat_sr')[-1])  # update the status
                     print("%s data atomospheric correction failure!" % mtl_xml)
-                    if data_path in sr_status['sence_sr_status']['fail']:
-                        print(data_path + 'processing status has update')
-                    else:
-                        sr_status['sence_sr_status']['fail'].append(data_path)
                     return 1
             else:
                 print("%s format is wrong!" % mtl_xml)
@@ -202,6 +198,10 @@ def atomCorrectPost(result_path):
         else:
             print(result_path + "no file neesd to remove!")
 
+    # update the status file 
+    with open(r'/home/jason/tq-data03/landsat_sr/sr_status.json', 'w') as fp:
+        json.dump(sr_status, fp, ensure_ascii=False, indent=2)
+
     return 0
 
 def batch_process(data_path, result_root):
@@ -223,23 +223,26 @@ def batch_process(data_path, result_root):
     if flag == -1:
         print(data_path + " preprocess failed!")
         return 1
+    elif flag == 0:
+        print(data_path + " has been process.")
+        return 0
     else:
-
-	# atomspheric correct process
+        print("sdhjshkj ")
+	    # atomspheric correct process
         flag1 = atomCorrectProcess(flag)
         if flag1 == 0:
-            print(flag + "Atomspheric correction is successful!")
+            print("%s atomspheric correction is successful!" % flag)
 
             # atomspheric correct postprocess
             flag2 = atomCorrectPost(flag)
             if flag2 == 0:
-                print(flag + "Atomspheric correction is OK!")
+                print("%s atomspheric correction is OK!" % flag)
                 return 0
             else:
-                print(flag + "Delete data exception!")
+                print("%s delete data exception!" % flag)
                 return 1
         else:
-            print(flag + "Atomspheric correction is failure!")
+            print("%s atomspheric correction is failure!" % flag)
             return 1
 
 def extract_vaild_path(imput_json):
@@ -261,8 +264,8 @@ def extract_vaild_path(imput_json):
     if not os.path.exists(imput_json):
         print("%s file path does not exist!" % imput_json)
         return -1
-    elif not os.path.isdir(imput_json):
-        print("%s is not a file directory" % imput_json)
+    elif not os.path.isfile(imput_json):
+        print("%s is not a file" % imput_json)
         return -1
     else:
         print("extracting the data.......\n")
@@ -277,6 +280,9 @@ def extract_vaild_path(imput_json):
                 valid_path_list.append(tmp_data['relative_path'])
             else:
                 print(tmp_data['relative_path'] + "cloudiness more than 80%")
+                file_name = tmp_data['relative_path'].split('landsat')[-1]
+                print(file_name)
+                sr_status['sence_sr_status']['cloud'].append(file_name)
                 continue    
         
         # remove the RT data
@@ -284,8 +290,8 @@ def extract_vaild_path(imput_json):
         valid_path_list.sort() # sort the list
         for tmp_valid in valid_path_list:
             if '_RT' in tmp_valid:
-                T1_file = os.path.split(os.path.split(tmp_valid)[0])[1:-2] + 'T1'
-                T2_file = os.path.split(os.path.split(tmp_valid)[0])[1:-2] + 'T2'
+                T1_file = os.path.split(os.path.split(tmp_valid)[0])[-1][1:-2] + 'T1'
+                T2_file = os.path.split(os.path.split(tmp_valid)[0])[-1][1:-2] + 'T2'
                 if T1_file or T2_file in valid_path_list:
                     print(tmp_valid + 'have T1 or T2. It no need to process again!')
                     continue
@@ -294,47 +300,33 @@ def extract_vaild_path(imput_json):
             else:
                 valid_result_list.append(tmp_valid)
 
-        # save the result
-        with open(output_file, 'w') as fp:
-            json.dump(valid_result_list, fp, ensure_ascii=False, indent=2)
-        print('Valid data total %s in %s' % (len(valid_result_list), imput_json))
+        # save the result, 多进程对表处理
+        # with open(output_file, 'w') as fp:
+        #     json.dump(valid_result_list, fp, ensure_ascii=False, indent=2)
+        # print('Valid data total %s in %s' % (len(valid_result_list), imput_json))
     return output_file
 
 if __name__ == '__main__':
 
     start = time.time()
-    test = r'/home/jason/data_pool/2017-le07.json'
-    extract_vaild_path(test)
-"""
-    # creat the result path
-    result_root = r'/home/jason/tq-data03/landsat_sr'
+
+    # open processing status
+    with open(r'/home/jason/tq-data03/landsat_sr/sr_status.json', 'r') as fp:
+        sr_status = json.load(fp)
+    
+    # set the output path
+    result_root = r'/home/jason/tq-data03/landsat_sr/LE07'
     if os.path.exists(result_root):
         print("%s result root is ok." % result_root)
     else:
         os.makedirs(result_root)
 
     # load the scence of path
-    with open(r'/home/jason/data_pool/2017-le07.json', 'r') as fp:
+    with open(r'/home/jason/data_pool/2017-le07_valid.json', 'r') as fp:
         process_dict = json.load(fp)
 
-
-    # load the processing sr_status
-    with open(r'/home/jason/tq-data03/landsat_sr/sr_status.json', 'w') as sr:
-        sr_status = json.load(sr)
-
-    # process the data
-    Parallel(n_jobs=3)(delayed(batch_process)(os.path.join(r'/home/jason', data_path['relative_path']), result_root) for data_path in process_dict['scenes'])
-
-    # save processing status
-    # for index in range(3): #len(process_dict['scenes'])
-    #     data_path = process_dict['scenes'][index]['relative_path']
-    #     process_path = os.path.join(r'/home/jason', data_path)
-    #     flag = batch_process(process_path, result_root)
-    #     if flag == 1:
-    #         print("%s sences atomsphere maybe fail" % data_path)
-    #         continue
-    #     else:
-    #         print("%s sences atomsphere process successfully." % data_path)
-"""
+    #process the data
+    Parallel(n_jobs=3)(delayed(batch_process)(os.path.join(r'/home/jason', data_path), result_root) for data_path in process_dict)
+    
     end = time.time()
     print("Task runs %0.2f seconds" % (end - start))
