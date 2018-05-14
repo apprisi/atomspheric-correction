@@ -1,18 +1,23 @@
 #!/usr/bin/#!/usr/bin/env python3
 import os
 import time
+import json
 import glob
 import shutil
 import subprocess
 
+sr_status = {'satellite': 'landsat 7&8',
+             'sence_sr_status': {'sucess': [], 'fail': []},
+             'versionifo': {'ESPA': '1.15.0', 'LEDAPS': '3.3.0',
+                            'LaSRC': '1.4.0'}}
 
 def atomCorrectPre(result_root, data_path):
     """
     Function:
-        copy the raw data to result path and covert tiled tiff to stripped tiff 
-       
+        copy the raw data to result path and covert tiled tiff to stripped tiff
+
     input:
-        result_root = /home/jason/data_pool/test_data  # set the result root path	
+        result_root = /home/jason/data_pool/test_data  # set the result root path
         data_path is as follows
         /../../landsat/LE07/01/010/028/LE07_L1GT_010028_20040503_20160926_01_T2
 
@@ -33,7 +38,7 @@ def atomCorrectPre(result_root, data_path):
         os.chdir(data_path)  # change the directory
 
         # covert the data_path to lsit and extract some string and make the result path
-        path_list   = data_path.split('/')  
+        path_list   = data_path.split('/')
         tmp_path    = os.path.join(path_list[-5], path_list[-4], path_list[-3], path_list[-2],
                            path_list[-1]) # 'LE07', '01', 'path' ,'row', 'name'
         result_path = os.path.join(result_root, tmp_path)
@@ -61,16 +66,17 @@ def atomCorrectPre(result_root, data_path):
                 print("%s conversion finished!" % tif)
             else:
                 print("%s conversion failed!" % tif)
-    
+
         os.chdir(result_path)  # change the directory, remove the IMD file
         IMD_list    = glob.glob(os.path.join(result_path, '*.IMD'))
         for imd in IMD_list:
             os.remove(imd)
             print(imd + " file is deleted!")
+        sr_status['sence_sr_status']['sucess'].append(result_path)
     return result_path
 
 if __name__ == '__main__':
-    
+
     """
     data_path = r'/home/jason/data_pool/test_data/LC08/LC08_L1GT_013027_20161008_20170220_01_T2'
     test_LE07 = r'/home/jason/data_pool/test_data/LE07/LE07_L1GT_010028_20021122_20160928_01_T2'
@@ -83,4 +89,3 @@ if __name__ == '__main__':
     print("The opuput path:%s" % flags)
     end = time.time()
     print("Task runs %0.2f seconds" % (end - start))
-
