@@ -26,7 +26,7 @@ def atomCorrectPost(result_path):
         print("%s is not a file directory" % result_path)
         return -1
     else:
-        print("deleted the data.......\n")
+        print(result_path + "deleted the data.......\n")
         os.chdir(result_path)
 
     if 'LC08' in result_path:
@@ -38,7 +38,7 @@ def atomCorrectPost(result_path):
                 os.remove(deleted_list)
             else:
                 print("no such file:%s" % deleted_list)
-    elif 'LE07' or 'LT05' in result_path:
+    elif 'LE07' in result_path:
         tif_list = glob.glob('*_B*.TIF')
         img_list = glob.glob('*_b[1-9]*')
         toa_list = glob.glob('*_toa_*')
@@ -55,7 +55,7 @@ def atomCorrectPost(result_path):
 
 if __name__ == '__main__':
     # remove the file  
-    test_path = glob.glob(r'/home/jason/tq-data03/landsat_sr/*/*/*')
+    test_path = glob.glob(r'/home/jason/tq-data03/landsat_sr/01/*/*/*')
     Parallel(n_jobs=5)(delayed(atomCorrectPost)(tmp_path) for tmp_path in test_path)
 
 """
