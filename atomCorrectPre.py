@@ -48,12 +48,12 @@ def atomCorrectPre(result_root, data_path):
         tif_list   = glob.glob(os.path.join(data_path, '*.TIF'))
 
         for txt in txt_list:
-            txt_dir, txt_name = os.path.split(txt)
+            _, txt_name = os.path.split(txt)
             shutil.copyfile(txt, os.path.join(result_path, txt_name))
 
         for tif in tif_list:
             start = time.time()
-            tif_dir, tif_name = os.path.split(tif)
+            _, tif_name = os.path.split(tif)
             ret1     = subprocess.run(['gdal_translate', '-co', 'TILED=NO', tif, os.path.join(result_path, tif_name)])
             end      = time.time()
             print("%s executed using time %.2f seconds" % (ret1.args, (end - start)))
