@@ -7,10 +7,6 @@ import shutil
 import subprocess
 from joblib import Parallel,delayed
 
-sr_status = {'satellite': 'landsat 7&8',
-             'sence_sr_status': {'sucess': [], 'fail': [], 'cloud': []},
-             'versionifo': {'ESPA': '1.15.0', 'LEDAPS': '3.3.0',
-                            'LaSRC': '1.4.0'}}
 
 def atomCorrectPre(data_path, result_root):
     """
@@ -49,33 +45,33 @@ def atomCorrectPre(data_path, result_root):
         print("Creat folder is ok!")  
     else:
         print("Folder is exist and it will be check!")
-        if os.listdir(result_path):
+        if 'sr' in os.listdir(result_path):
             print("%s maybe has been processed!" % result_path)
         else:
-            print("%s is empty!" % result_path)
+            print("%s is empty or not converted!" % result_path)
 
             # copy the txt to result path and convert the TIFF
             txt_list = glob.glob('*.txt')
-            for txt in txt_list:
-                _, txt_name = os.path.split(txt)
-                shutil.copyfile(txt, os.path.join(result_path, txt_name))
-                
-            tif_list   = glob.glob('*.TIF')
+            tif_list = glob.glob('*.TIF')
+
             for tif in tif_list:
                 _, tif_name = os.path.split(tif)
-                ret1     = subprocess.run(['gdal_translate', '-co', 'TILED=NO', tif, os.path.join(result_path, tif_name)])
-
+                ret1 = subprocess.run(['gdal_translate', '-co', 'TILED=NO', tif, os.path.join(result_path, tif_name)])
                 if (ret1.returncode == 0):
                     print("%s conversion finished!" % tif) 
                 else:
                     print("%s conversion failed!" % tif)
+
+            for txt in txt_list:
+                _, txt_name = os.path.split(txt)
+                shutil.copyfile(txt, os.path.join(result_path, txt_name))               
 
             # change the directory, remove the IMD file
             os.chdir(result_path)  
             IMD_list    = glob.glob('*.IMD')
             for imd in IMD_list:
                 os.remove(imd)
-            print(imd + " file is deleted!")
+                print(imd + " file is deleted!")
     return result_path
 
 
@@ -103,7 +99,8 @@ def atomCorrectProcess(data_path):
 
     # change the directory, convert to ESPA
     os.chdir(data_path)  
-    mtl_txt = glob.glob(os.path.join(data_path, '*_MTL.txt'))[0] # find MTL filename
+    mtl_txt = glob.glob('*_MTL.txt')[0] # find MTL filename
+    print(mtl_txt)
     ret1 = subprocess.run(['convert_lpgs_to_espa', '--mtl', mtl_txt])
 
     if (ret1.returncode != 0):
@@ -204,7 +201,6 @@ def batch_process(data_path, result_root):
         print(data_path + " has been process.")
         return 0
     else:
-        print("sdhjshkj ")
 	    # atomspheric correct process
         flag1 = atomCorrectProcess(flag)
         if flag1 == 0:
@@ -257,9 +253,6 @@ def extract_vaild_path(imput_json):
                 valid_path_list.append(tmp_data['relative_path'])
             else:
                 print(tmp_data['relative_path'] + "cloudiness more than 80%")
-                file_name = tmp_data['relative_path'].split('landsat')[-1]
-                print(file_name)
-                sr_status['sence_sr_status']['cloud'].append(file_name)
                 continue    
         
         # remove the RT data
@@ -286,10 +279,14 @@ def extract_vaild_path(imput_json):
 if __name__ == '__main__':
 
     start = time.time()
-
-    # # open processing status
-    # with open(r'/home/jason/tq-data03/landsat_sr/sr_status.json', 'r') as fp:
-    #     sr_status = json.load(fp)
+    # # deleted the empty dir and RT dir
+    # all_tmp = glob.glob(r'/home/jason/tq-data03/landsat_sr/LE07/*/*/*/*')
+    # print(len(all_tmp))
+    # for tmp in all_tmp:
+    #     if not os.listdir(tmp):
+    #         os.rmdir(tmp)
+    # a_tmp = glob.glob(r'/home/jason/tq-data03/landsat_sr/LE07/*/*/*/*')
+    # print(len(a_tmp))
     
     # set the output path
     result_root = r'/home/jason/tq-data03/landsat_sr/LE07'
@@ -304,6 +301,5 @@ if __name__ == '__main__':
 
     #process the data
     Parallel(n_jobs=3)(delayed(batch_process)(os.path.join(r'/home/jason', data_path), result_root) for data_path in process_dict)
-    
     end = time.time()
     print("Task runs %0.2f seconds" % (end - start))
