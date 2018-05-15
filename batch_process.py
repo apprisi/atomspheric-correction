@@ -37,52 +37,45 @@ def atomCorrectPre(data_path, result_root):
     else:
         print("Preprocess the data: %s\n" % data_path)
 
-        # find the process status if finished, it can skip
-        file_name = data_path.split('landsat')[-1]
-        if file_name in sr_status['sence_sr_status']['sucess'] or sr_status['sence_sr_status']['fail']:
-            print(data_path + "has been processed!")
-            return 0
+    os.chdir(data_path)  # change the directory
 
-        os.chdir(data_path)  # change the directory
-
-        # covert the data_path to lsit and extract some string and make the result path
-        path_list   = data_path.split('/')
-        tmp_path    = os.path.join(path_list[-5], path_list[-4], path_list[-3], path_list[-2],
-                           path_list[-1]) # 'LE07', '01', 'path' ,'row', 'name'
-        result_path = os.path.join(result_root, tmp_path)
-        if os.path.exists(result_path):
-            print("Folder is exist and it maybe has been processed!")          
+    # covert the data_path to lsit and extract some string and make the result path
+    path_list   = data_path.split('/')
+    tmp_path    = os.path.join(path_list[-5], path_list[-4], path_list[-3], path_list[-2],
+                        path_list[-1]) # 'LE07', '01', 'path' ,'row', 'name'
+    result_path = os.path.join(result_root, tmp_path)
+    if not os.path.exists(result_path):
+        os.makedirs(result_path)
+        print("Creat folder is ok!")  
+    else:
+        print("Folder is exist and it will be check!")
+        if os.listdir(result_path):
+            print("%s maybe has been processed!" % result_path)
         else:
-            os.makedirs(result_path)
-            print("Creat folder is ok!")
+            print("%s is empty!" % result_path)
 
-        # copy the txt to result path and convert the TIFF
-        txt_list = glob.glob('*.txt')
-        
-        print(txt_list)
-        for txt in txt_list:
-            print(txt)
-            _, txt_name = os.path.split(txt)
-            shutil.copyfile(txt, os.path.join(result_path, txt_name))
-            
-        tif_list   = glob.glob(os.path.join(data_path, '*.TIF'))
-        for tif in tif_list:
-            start = time.time()
-            _, tif_name = os.path.split(tif)
-            ret1     = subprocess.run(['gdal_translate', '-co', 'TILED=NO', tif, os.path.join(result_path, tif_name)])
-            end      = time.time()
-            print("%s executed using time %.2f seconds" % (ret1.args, (end - start)))
-            if (ret1.returncode == 0):
-                print("%s conversion finished!" % tif)
-            else:
-                print("%s conversion failed!" % tif)
+            # copy the txt to result path and convert the TIFF
+            txt_list = glob.glob('*.txt')
+            for txt in txt_list:
+                _, txt_name = os.path.split(txt)
+                shutil.copyfile(txt, os.path.join(result_path, txt_name))
+                
+            tif_list   = glob.glob('*.TIF')
+            for tif in tif_list:
+                _, tif_name = os.path.split(tif)
+                ret1     = subprocess.run(['gdal_translate', '-co', 'TILED=NO', tif, os.path.join(result_path, tif_name)])
 
-        # change the directory, remove the IMD file
-        os.chdir(result_path)  
-        IMD_list    = glob.glob('*.IMD')
-        for imd in IMD_list:
-            os.remove(imd)
-        print(imd + " file is deleted!")
+                if (ret1.returncode == 0):
+                    print("%s conversion finished!" % tif) 
+                else:
+                    print("%s conversion failed!" % tif)
+
+            # change the directory, remove the IMD file
+            os.chdir(result_path)  
+            IMD_list    = glob.glob('*.IMD')
+            for imd in IMD_list:
+                os.remove(imd)
+            print(imd + " file is deleted!")
     return result_path
 
 
@@ -108,49 +101,38 @@ def atomCorrectProcess(data_path):
     else:
         print("Converting the data.......\n")
 
-        os.chdir(data_path)  # change the directory
-        mtl_txt = glob.glob(os.path.join(data_path, '*_MTL.txt'))[0] # find MTL filename
-        start = time.time()
-        ret1 = subprocess.run(['convert_lpgs_to_espa', '--mtl', mtl_txt])
-        end = time.time()
-        print("%s executed using time %.2f seconds" % (ret1.args, (end - start)))
-        if (ret1.returncode != 0):
-            print("%s data format conversion failed!" % mtl_txt)
-            sr_status['sence_sr_status']['fail'].append(data_path.split('landsat_sr')[-1])
-            return 1
-        else:
-            print("%s data format conversion completed!" % mtl_txt)
+    # change the directory, convert to ESPA
+    os.chdir(data_path)  
+    mtl_txt = glob.glob(os.path.join(data_path, '*_MTL.txt'))[0] # find MTL filename
+    ret1 = subprocess.run(['convert_lpgs_to_espa', '--mtl', mtl_txt])
 
-            mtl_xml = glob.glob(os.path.join(data_path,'*.xml'))[0] # atomospheric
-            if ('LC08' in mtl_xml):
-                start = time.time()
-                ret2 = subprocess.run(['do_lasrc.py', '--xml', mtl_xml])
-                end = time.time()
-                print("%s executed using time %.2f seconds" % (ret2.args, (end - start)))
-                if (ret2.returncode == 0):
-                    print("%s data atomospheric correction finished!" % mtl_xml)
-                    sr_status['sence_sr_status']['sucess'].append(data_path.split('landsat_sr')[-1]) # update the status
-                    return 0
-                else:
-                    sr_status['sence_sr_status']['fail'].append(data_path.split('landsat_sr')[-1]) # update the status
-                    print("%s data atomospheric correction failure!" % mtl_xml)
-                    return 1
-            if ('LE07' or 'LT05' in mtl_xml):
-                start = time.time()
-                ret2 = subprocess.run(['do_ledaps.py', '--xml', mtl_xml])
-                end = time.time()
-                print("%s executed using time %.2f seconds" % (ret2.args, (end - start)))
-                if (ret2.returncode == 0):
-                    sr_status['sence_sr_status']['sucess'].append(data_path.split('landsat_sr')[-1])  # update the status
-                    print("%s data atomospheric correction finished!" % mtl_xml)
-                    return 0
-                else:
-                    sr_status['sence_sr_status']['fail'].append(data_path.split('landsat_sr')[-1])  # update the status
-                    print("%s data atomospheric correction failure!" % mtl_xml)
-                    return 1
-            else:
-                print("%s format is wrong!" % mtl_xml)
-                return 1
+    if (ret1.returncode != 0):
+        print("%s data format conversion failed!" % mtl_txt)
+        return 1
+    else:
+        print("%s data format conversion completed!" % mtl_txt)
+
+    # atomspheric correct
+    mtl_xml = glob.glob('*.xml')[0] # read XML
+    if ('LC08' in mtl_xml):
+        ret2 = subprocess.run(['do_lasrc.py', '--xml', mtl_xml])
+        if (ret2.returncode == 0):
+            print("%s data atomospheric correction finished!" % mtl_xml)
+            return 0
+        else:
+            print("%s data atomospheric correction failure!" % mtl_xml)
+            return 1
+    if ('LE07' or 'LT05' in mtl_xml):
+        ret2 = subprocess.run(['do_ledaps.py', '--xml', mtl_xml])
+        if (ret2.returncode == 0):
+            print("%s data atomospheric correction finished!" % mtl_xml)
+            return 0
+        else:
+            print("%s data atomospheric correction failure!" % mtl_xml)
+            return 1
+    else:
+        print("%s format is wrong!" % mtl_xml)
+        return 1
 
 def atomCorrectPost(result_path):
     """
@@ -175,33 +157,28 @@ def atomCorrectPost(result_path):
     else:
         print("deleted the data.......\n")
 
-        os.chdir(result_path)
-        if 'LC08' in result_path:
-            tif_list = glob.glob('*_B*.TIF')
-            img_list = glob.glob('*_b[1-9]*')
-            toa_list = glob.glob('*_toa_*')
-            for deleted_list in tif_list + img_list + toa_list:
-                if os.path.exists(deleted_list):
-                    os.remove(deleted_list)
-                else:
-                    print("no such file:%s" % deleted_list)
-        elif 'LE07' or 'LT05' in result_path:
-            tif_list = glob.glob('*_B*.TIF')
-            img_list = glob.glob('*_b[1-9]*')
-            toa_list = glob.glob('*_toa_*')
-            txt_list = glob.glob('ln*.txt')
-            for deleted_list in tif_list + img_list + toa_list + txt_list:
-                if os.path.exists(deleted_list):
-                    os.remove(deleted_list)
-                else:
-                    print("no such file:%s" % deleted_list)
-        else:
-            print(result_path + "no file neesd to remove!")
-
-    # update the status file 
-    with open(r'/home/jason/tq-data03/landsat_sr/sr_status.json', 'w') as fp:
-        json.dump(sr_status, fp, ensure_ascii=False, indent=2)
-
+    os.chdir(result_path)
+    if 'LC08' in result_path:
+        tif_list = glob.glob('*_B*.TIF')
+        img_list = glob.glob('*_b[1-9]*')
+        toa_list = glob.glob('*_toa_*')
+        for deleted_list in tif_list + img_list + toa_list:
+            if os.path.exists(deleted_list):
+                os.remove(deleted_list)
+            else:
+                print("no such file:%s" % deleted_list)
+    elif 'LE07' or 'LT05' in result_path:
+        tif_list = glob.glob('*_B*.TIF')
+        img_list = glob.glob('*_b[1-9]*')
+        toa_list = glob.glob('*_toa_*')
+        txt_list = glob.glob('ln*.txt')
+        for deleted_list in tif_list + img_list + toa_list + txt_list:
+            if os.path.exists(deleted_list):
+                os.remove(deleted_list)
+            else:
+                print("no such file:%s" % deleted_list)
+    else:
+        print(result_path + "no file need to remove!")
     return 0
 
 def batch_process(data_path, result_root):
@@ -310,9 +287,9 @@ if __name__ == '__main__':
 
     start = time.time()
 
-    # open processing status
-    with open(r'/home/jason/tq-data03/landsat_sr/sr_status.json', 'r') as fp:
-        sr_status = json.load(fp)
+    # # open processing status
+    # with open(r'/home/jason/tq-data03/landsat_sr/sr_status.json', 'r') as fp:
+    #     sr_status = json.load(fp)
     
     # set the output path
     result_root = r'/home/jason/tq-data03/landsat_sr/LE07'
