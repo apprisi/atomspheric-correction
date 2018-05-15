@@ -193,6 +193,9 @@ def batch_process(data_path, result_root):
     """
 
     # atomspheric correct preprocess
+    process_list = glob.glob(os.path.join(result_root, '01', '*', '*', '*'))
+    print("------>Total:%s Process:%s, Percentage:%d\n", 
+        (len(process_dict), len(process_list), len(process_list)/len(process_dict*100)))
     flag = atomCorrectPre(data_path, result_root)
     if flag == -1:
         print(data_path + " preprocess failed!")
