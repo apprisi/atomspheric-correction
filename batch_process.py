@@ -40,13 +40,16 @@ def atomCorrectPre(data_path, result_root):
     tmp_path    = os.path.join(path_list[-5], path_list[-4], path_list[-3], path_list[-2],
                         path_list[-1]) # 'LE07', '01', 'path' ,'row', 'name'
     result_path = os.path.join(result_root, tmp_path)
+
+    # check the path and file
     if not os.path.exists(result_path):
         os.makedirs(result_path)
         print("Creat folder is ok!")  
-    else:
+    elif os.path.exists(result_path):
         print("Folder is exist and it will be check!")
-        if 'sr' in os.listdir(result_path):
+        if '_sr' in ''.join(os.listdir(result_path)):
             print("%s maybe has been processed!" % result_path)
+            return 0
         else:
             print("%s is empty or not converted!" % result_path)
 
@@ -196,28 +199,32 @@ def batch_process(data_path, result_root):
     process_list = glob.glob(os.path.join(result_root, '01', '*', '*', '*'))
     print("------>Total:%s Process:%s, Percentage:%.0f\n" % 
         (len(process_dict), len(process_list), 100*len(process_list)/len(process_dict)))
+
     flag = atomCorrectPre(data_path, result_root)
     if flag == -1:
         print(data_path + " preprocess failed!")
         return 1
     elif flag == 0:
-        print(data_path + " has been process.")
+        print(data_path + " has been processed.")
         return 0
     else:
 	    # atomspheric correct process
+        print("%s will be process" % flag)
         flag1 = atomCorrectProcess(flag)
         if flag1 == 0:
             print("%s atomspheric correction is successful!" % flag)
-
             # atomspheric correct postprocess
             flag2 = atomCorrectPost(flag)
             if flag2 == 0:
                 print("%s atomspheric correction is OK!" % flag)
                 return 0
-            else:
+            elif flag2==-1:
                 print("%s delete data exception!" % flag)
                 return 1
-        else:
+        elif flag1 == -1:
+            print("%s does not exist!" % flag)
+            return 1
+        elif flag1 == 0:
             print("%s atomspheric correction is failure!" % flag)
             return 1
 
