@@ -24,6 +24,7 @@ def atomCorrectPre(data_path, result_root):
         return 0, data  has been processed
     """
 
+    # check the data path
     if not os.path.exists(data_path):
         print("%s file path does not exist!" % data_path)
         return -1
@@ -45,6 +46,7 @@ def atomCorrectPre(data_path, result_root):
     if not os.path.exists(result_path):
         os.makedirs(result_path)
         print("Creat folder is ok!")  
+
     elif os.path.exists(result_path):
         print("Folder is exist and it will be check!")
         if '_sr' in ''.join(os.listdir(result_path)):
@@ -53,28 +55,29 @@ def atomCorrectPre(data_path, result_root):
         else:
             print("%s is empty or not converted!" % result_path)
 
-            # copy the txt to result path and convert the TIFF
-            txt_list = glob.glob('*.txt')
-            tif_list = glob.glob('*.TIF')
+    # copy the txt to result path and convert the TIFF
+    txt_list = glob.glob('*.txt')
+    tif_list = glob.glob('*.TIF')
 
-            for tif in tif_list:
-                _, tif_name = os.path.split(tif)
-                ret1 = subprocess.run(['gdal_translate', '-co', 'TILED=NO', tif, os.path.join(result_path, tif_name)])
-                if (ret1.returncode == 0):
-                    print("%s conversion finished!" % tif) 
-                else:
-                    print("%s conversion failed!" % tif)
+    for tif in tif_list:
+        _, tif_name = os.path.split(tif)
+        ret1 = subprocess.run(['gdal_translate', '-co', 'TILED=NO', tif, os.path.join(result_path, tif_name)])
+        if (ret1.returncode == 0):
+            print("%s conversion finished!" % tif) 
+        else:
+            print("%s conversion failed!" % tif)
 
-            for txt in txt_list:
-                _, txt_name = os.path.split(txt)
-                shutil.copyfile(txt, os.path.join(result_path, txt_name))               
+    for txt in txt_list:
+        _, txt_name = os.path.split(txt)
+        shutil.copyfile(txt, os.path.join(result_path, txt_name))               
 
-            # change the directory, remove the IMD file
-            os.chdir(result_path)  
-            IMD_list    = glob.glob('*.IMD')
-            for imd in IMD_list:
-                os.remove(imd)
-                print(imd + " file is deleted!")
+    # change the directory, remove the IMD file
+    os.chdir(result_path)  
+    IMD_list    = glob.glob('*.IMD')
+    for imd in IMD_list:
+        os.remove(imd)
+        print(imd + " file is deleted!")
+        
     return result_path
 
 
@@ -117,18 +120,18 @@ def atomCorrectProcess(data_path):
     if ('LC08' in mtl_xml):
         ret2 = subprocess.run(['do_lasrc.py', '--xml', mtl_xml])
         if (ret2.returncode == 0):
-            print("%s data atomospheric correction finished!" % mtl_xml)
+            print("%s data atomospheric correction processing finished!" % mtl_xml)
             return 0
         else:
-            print("%s data atomospheric correction failure!" % mtl_xml)
+            print("%s data atomospheric correction processing failure!" % mtl_xml)
             return 1
     if ('LE07' or 'LT05' in mtl_xml):
         ret2 = subprocess.run(['do_ledaps.py', '--xml', mtl_xml])
         if (ret2.returncode == 0):
-            print("%s data atomospheric correction finished!" % mtl_xml)
+            print("%s data atomospheric correction processing finished!" % mtl_xml)
             return 0
         else:
-            print("%s data atomospheric correction failure!" % mtl_xml)
+            print("%s data atomospheric correction processing failure!" % mtl_xml)
             return 1
     else:
         print("%s format is wrong!" % mtl_xml)
@@ -212,11 +215,11 @@ def batch_process(data_path, result_root):
         print("%s will be process" % flag)
         flag1 = atomCorrectProcess(flag)
         if flag1 == 0:
-            print("%s atomspheric correction is successful!" % flag)
+            print("%s atomspheric correction processing is successful!" % flag)
             # atomspheric correct postprocess
             flag2 = atomCorrectPost(flag)
             if flag2 == 0:
-                print("%s atomspheric correction is OK!" % flag)
+                print("%s atomspheric correction postprocessing is OK!" % flag)
                 return 0
             elif flag2==-1:
                 print("%s delete data exception!" % flag)
@@ -310,6 +313,9 @@ if __name__ == '__main__':
         process_dict = json.load(fp)
 
     #process the data
-    Parallel(n_jobs=3)(delayed(batch_process)(os.path.join(r'/home/jason', data_path), result_root) for data_path in process_dict)
+    data_path = r'/home/jason/data2/landsat/LE07/01/020/033/LE07_L1TP_020033_20170310_20170405_01_T1/'
+    flag = atomCorrectPre(data_path, result_root)
+    print(flag)
+    #Parallel(n_jobs=3)(delayed(batch_process)(os.path.join(r'/home/jason', data_path), result_root) for data_path in process_dict)
     end = time.time()
     print("Task runs %0.2f seconds" % (end - start))
