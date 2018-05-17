@@ -77,7 +77,7 @@ def atomCorrectPre(data_path, result_root):
     for imd in IMD_list:
         os.remove(imd)
         print(imd + " file is deleted!")
-        
+
     return result_path
 
 
@@ -313,9 +313,6 @@ if __name__ == '__main__':
         process_dict = json.load(fp)
 
     #process the data
-    data_path = r'/home/jason/data2/landsat/LE07/01/020/033/LE07_L1TP_020033_20170310_20170405_01_T1/'
-    flag = atomCorrectPre(data_path, result_root)
-    print(flag)
-    #Parallel(n_jobs=3)(delayed(batch_process)(os.path.join(r'/home/jason', data_path), result_root) for data_path in process_dict)
+    Parallel(n_jobs=3)(delayed(batch_process)(os.path.join(r'/home/jason', data_path), result_root) for data_path in process_dict)
     end = time.time()
     print("Task runs %0.2f seconds" % (end - start))
