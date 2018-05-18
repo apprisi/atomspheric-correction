@@ -199,9 +199,9 @@ def batch_process(data_path, result_root):
     """
 
     # atomspheric correct preprocess
-    process_list = glob.glob(os.path.join(result_root, '01', '*', '*', '*'))
-    print("------>Total:%s Process:%s, Percentage:%.0f\n" % 
-        (len(process_dict), len(process_list), 100*len(process_list)/len(process_dict)))
+    processed_list = glob.glob(os.path.join(result_root, '01', '*', '*', '*'))
+    print("-------%s---->Total:%s Total Process:%s, Percentage:%.2f---------\n" % 
+        ((json_file), len(process_dict), len(processed_list), 100*len(processed_list)/85000))
 
     flag = atomCorrectPre(data_path, result_root)
     if flag == -1:
@@ -244,7 +244,9 @@ if __name__ == '__main__':
         os.makedirs(result_root)
 
     # # load the scence of path
-    with open(r'/home/jason/data_pool/sample_data/SRC_DATA_JSON/2017-le07_valid.json', 'r') as fp:
+    json_path = r'/home/jason/data_pool/sample_data/SRC_DATA_JSON/2017-le07_valid.json'
+    json_file = os.path.split(json_path)
+    with open(json_path, 'r') as fp:
         process_dict = json.load(fp)
 
     #process the data
