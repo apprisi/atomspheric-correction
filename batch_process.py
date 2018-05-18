@@ -231,75 +231,10 @@ def batch_process(data_path, result_root):
             print("%s atomspheric correction is failure!" % flag)
             return 1
 
-def extract_vaild_path(imput_json):
-    """
-    Funciton:
-        a. when RT and T1 are exitence, remove the RT
-        b. when cloud is 100, remove the data 
-
-    input:    
-        input_json: json file path, such as '/home/jason/data_pool/2017-le07.json'
-
-    output:    
-        valid_path: json file path, such as '/home/jason/data_pool/2017-le07_valid.json'
-
-    """
-    
-    valid_path_list = []  # save the data path
-    output_file = r'/home/jason/data_pool/2017-le07_valid.json'
-    if not os.path.exists(imput_json):
-        print("%s file path does not exist!" % imput_json)
-        return -1
-    elif not os.path.isfile(imput_json):
-        print("%s is not a file" % imput_json)
-        return -1
-    else:
-        print("extracting the data.......\n")
-
-        with open(imput_json, 'r') as fp:
-            process_dict = json.load(fp)
-
-        # extra path to list and remove cloudiness more than 80%
-        for tmp_data in process_dict['scenes']:
-            if tmp_data['cloud_perc'] <= 80:
-                print(tmp_data['relative_path'] + "add to the list" )
-                valid_path_list.append(tmp_data['relative_path'])
-            else:
-                print(tmp_data['relative_path'] + "cloudiness more than 80%")
-                continue    
-        
-        # remove the RT data
-        valid_result_list = []
-        valid_path_list.sort() # sort the list
-        for tmp_valid in valid_path_list:
-            if '_RT' in tmp_valid:
-                T1_file = os.path.split(os.path.split(tmp_valid)[0])[-1][1:-2] + 'T1'
-                T2_file = os.path.split(os.path.split(tmp_valid)[0])[-1][1:-2] + 'T2'
-                if T1_file or T2_file in valid_path_list:
-                    print(tmp_valid + 'have T1 or T2. It no need to process again!')
-                    continue
-                else:
-                    valid_result_list.append(tmp_valid)
-            else:
-                valid_result_list.append(tmp_valid)
-
-        # save the result, 多进程对表处理
-        # with open(output_file, 'w') as fp:
-        #     json.dump(valid_result_list, fp, ensure_ascii=False, indent=2)
-        # print('Valid data total %s in %s' % (len(valid_result_list), imput_json))
-    return output_file
 
 if __name__ == '__main__':
 
     start = time.time()
-    # # deleted the empty dir and RT dir
-    # all_tmp = glob.glob(r'/home/jason/tq-data03/landsat_sr/LE07/*/*/*/*')
-    # print(len(all_tmp))
-    # for tmp in all_tmp:
-    #     if not os.listdir(tmp):
-    #         os.rmdir(tmp)
-    # a_tmp = glob.glob(r'/home/jason/tq-data03/landsat_sr/LE07/*/*/*/*')
-    # print(len(a_tmp))
     
     # set the output path
     result_root = r'/home/jason/tq-data03/landsat_sr/LE07'
@@ -308,8 +243,8 @@ if __name__ == '__main__':
     else:
         os.makedirs(result_root)
 
-    # load the scence of path
-    with open(r'/home/jason/data_pool/2017-le07_valid.json', 'r') as fp:
+    # # load the scence of path
+    with open(r'/home/jason/data_pool/sample_data/SRC_DATA_JSON/2017-le07_valid.json', 'r') as fp:
         process_dict = json.load(fp)
 
     #process the data
