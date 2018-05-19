@@ -55,7 +55,7 @@ def processing_statistics():
         print("process %s data ...." % str(y))
         if y < 2013:
             sr_status['LT05']['Processed_list'][str(y)] = [pl for pl in processed_list if '/LT05/' in pl[:-15] and str(y) in pl[:-15]]
-            sr_status['LE07']['Processed_list'][str(y)] = [pl for pl in processed_list if '/LE07/' in pl[:-15]  and str(y) in pl[:-15]]
+            sr_status['LE07']['Processed_list'][str(y)] = [pl for pl in processed_list if '/LE07/' in pl[:-15] and str(y) in pl[:-15]]
         else:
             sr_status['LC08']['Processed_list'][str(y)] = [pl for pl in processed_list if '/LC08/' in pl[:-15] and str(y) in pl[:-15]]
             sr_status['LE07']['Processed_list'][str(y)] = [pl for pl in processed_list if '/LE07/' in pl[:-15] and str(y) in pl[:-15]]
@@ -83,7 +83,9 @@ def processing_statistics():
         json.dump(sr_status, fp, ensure_ascii=False, indent=4)       
 
 if __name__ == '__main__':
-    start = time.time()   
-    processing_statistics()
-    end = time.time()
-    print("Task runs %0.2f seconds" % (end - start))
+    
+    seconds = 3600
+    print("Process list will be maked.")
+    while 1==1:
+        processing_statistics()
+        time.sleep(60)
