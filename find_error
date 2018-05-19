@@ -46,12 +46,8 @@ def processing_statistics():
 
     # print total
     star40 = '*'*71
-    f = open('/home/jason/data_pool/sample_data/process_log.txt', "w")
     print("%s\n*Total data: 85000, Total processed:%d, Processing Percentage:%.2f*\n%s" %
          (star40, len(processed_list), 100*len(processed_list)/85000, star40))
-    print("%s\n*Total data: 85000, Total processed:%d, Processing Percentage:%.2f*\n%s" %
-         (star40, len(processed_list), 100*len(processed_list)/85000, star40), file = f)
-    f.close() #close the file
 
     # extract the year process list
     year = list(range(2010, 2019))
