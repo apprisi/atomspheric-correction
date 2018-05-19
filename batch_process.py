@@ -134,7 +134,7 @@ def atomCorrectProcess(data_path):
         else:
             print("%s data atomospheric correction processing failure!\n" % mtl_xml)
             return 1
-    if ('LE07' or 'LT05' in mtl_xml):
+    elif ('LE07' in mtl_xml or 'LT05' in mtl_xml):
         ret2 = subprocess.run(['do_ledaps.py', '--xml', mtl_xml])
         if (ret2.returncode == 0):
             print("%s data atomospheric correction processing finished!\n" % mtl_xml)

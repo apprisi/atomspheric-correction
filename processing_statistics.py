@@ -45,7 +45,7 @@ def processing_statistics():
     processed_list = glob.glob(processed_root)
 
     # print total
-    star40 = '*'*40
+    star40 = '*'*71
     print("%s\n*Total data: 85000, Total processed:%d, Processing Percentage:%.2f*\n%s" %
          (star40, len(processed_list), 100*len(processed_list)/85000, star40))
 
@@ -54,21 +54,20 @@ def processing_statistics():
     for y in year:
         print("process %s data ...." % str(y))
         if y < 2013:
-            sr_status['LT05']['Processed_list'][str(y)] = [pl for pl in processed_list if 'LT05' and str(y) in pl]
-            sr_status['LE07']['Processed_list'][str(y)] = [pl for pl in processed_list if 'LE07' and str(y) in pl]
+            sr_status['LT05']['Processed_list'][str(y)] = [pl for pl in processed_list if '/LT05/' in pl[:-15] and str(y) in pl[:-15]]
+            sr_status['LE07']['Processed_list'][str(y)] = [pl for pl in processed_list if '/LE07/' in pl[:-15]  and str(y) in pl[:-15]]
         else:
-            sr_status['LC08']['Processed_list'][str(y)] = [pl for pl in processed_list if 'LC08' and str(y) in pl]
-            sr_status['LE07']['Processed_list'][str(y)] = [pl for pl in processed_list if 'LE07' and str(y) in pl]
+            sr_status['LC08']['Processed_list'][str(y)] = [pl for pl in processed_list if '/LC08/' in pl[:-15] and str(y) in pl[:-15]]
+            sr_status['LE07']['Processed_list'][str(y)] = [pl for pl in processed_list if '/LE07/' in pl[:-15] and str(y) in pl[:-15]]
     
     # print result
-    star18 = '*'*18
+    star18 = '*'*30
     print("%s" % star18)
-    print("LC08:\n*---->2017:%d\n*---->2016:%d\n*---->2015:%d\n---->2014:%d*\n*---->2013:%d\n" %
+    print("LC08:\n*---->2017:%d\n*---->2016:%d\n*---->2015:%d\n*---->2014:%d\n*---->2013:%d\n" %
           (len(sr_status['LC08']['Processed_list']['2017']), len(sr_status['LC08']['Processed_list']['2016']),
           len(sr_status['LC08']['Processed_list']['2015']), len(sr_status['LC08']['Processed_list']['2014']),
           len(sr_status['LC08']['Processed_list']['2013'])))
-    print("LE07:\n*---->2017:%d\n*---->2016:%d\n*---->2015:%d\n---->2014:%d*\n \
-          *---->2013:%d\n*---->2012:%d\n*---->2011:%d\n*---->2010:%d\n" %
+    print("LE07:\n*---->2017:%d\n*---->2016:%d\n*---->2015:%d\n*---->2014:%d\n*---->2013:%d\n*---->2012:%d\n*---->2011:%d\n*---->2010:%d\n" %
           (len(sr_status['LE07']['Processed_list']['2017']), len(sr_status['LE07']['Processed_list']['2016']),
           len(sr_status['LE07']['Processed_list']['2015']), len(sr_status['LE07']['Processed_list']['2014']),
           len(sr_status['LE07']['Processed_list']['2013']),len(sr_status['LE07']['Processed_list']['2012']),
