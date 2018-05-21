@@ -326,10 +326,10 @@ def getOzoneSource (filename):
 # Notes:
 ############################################################################
 def resolveFile (fileList):
-    omiregex = re.compile('.*_omi_\d*.txt')
-    earthproberegex = re.compile('.*_epc_\d*.txt')
-    meteor3regex = re.compile('.*_m3t_\d*.txt')
-    nimbusregex = re.compile('.*_n7t_\d*.txt')
+    omiregex = re.compile(r'.*_omi_\d*.txt')
+    earthproberegex = re.compile(r'.*_epc_\d*.txt')
+    meteor3regex = re.compile(r'.*_m3t_\d*.txt')
+    nimbusregex = re.compile(r'.*_n7t_\d*.txt')
 
     # loop through the files, looping for OMI, EARTHPROBE, METEOR3, and NIMBUS7
     # files in that order.  return the first one found as the file to be
@@ -379,7 +379,7 @@ def downloadToms (year, destination):
     # it recursively
     if not os.path.exists(destination):
         logger.info('{0} does not exist... creating'.format(destination))
-        os.makedirs(destination, 0777)
+        os.makedirs(destination)
     else:
         # directory already exists and possibly has files in it.  any old
         # files need to be cleaned up
@@ -467,7 +467,7 @@ def getTomsData (ancdir, year):
     outputDir = "%s/EP_TOMS/ozone_%d" % (ancdir, year)
     if not os.path.exists(outputDir):
         logger.info('{0} does not exist... creating'.format(outputDir))
-        os.makedirs(outputDir, 0777)
+        os.makedirs(outputDir)
 
     # loop through each day in the year and process the EP/TOMS data
     for doy in range(1, day_of_year + 1):

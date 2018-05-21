@@ -4,6 +4,7 @@ import os
 import time
 import glob
 import json
+import datetime
 
 sr_status ={'LT05': 
                 {'Processed_list': 
@@ -43,16 +44,18 @@ def processing_statistics():
     # extract the process path
     processed_root = os.path.join('/home/jason', '*', 'landsat_sr', '*', '01', '*', '*', '*')
     processed_list = glob.glob(processed_root)
-
+    
     # print total
-    star40 = '*'*71
-    f = open('/home/jason/data_pool/sample_data/process_log.txt', "w")
-    print("%s\n*Total data: 85000, Total processed:%d, Processing Percentage:%.2f*\n%s" %
+    star40 = '*'*75
+    time_stamp = datetime.datetime.now()
+    f = open('/home/jason/data_pool/sample_data/process_log.txt', 'a')
+    print("%s\n*  Total data: 85000, Total processed:%d, Processing Percentage:%.2f  *\n%s" %
          (star40, len(processed_list), 100*len(processed_list)/85000, star40))
-    print("%s\n*Total data: 85000, Total processed:%d, Processing Percentage:%.2f*\n%s" %
-         (star40, len(processed_list), 100*len(processed_list)/85000, star40), file = f)
-    f.close() #close the file
 
+    print("%s------->Total data: 85000, Total processed:%d, Processing Percentage:%.2f\n" %
+         (time_stamp.strftime("%Y-%m-%d %H:%M:%S %p"), len(processed_list), 100*len(processed_list)/85000), file = f)
+    
+    f.close()
     # extract the year process list
     year = list(range(2010, 2019))
     for y in year:
@@ -80,7 +83,7 @@ def processing_statistics():
           (len(sr_status['LT05']['Processed_list']['2012']), len(sr_status['LT05']['Processed_list']['2011']),
           len(sr_status['LT05']['Processed_list']['2010'])))      
     print("%s" % star18)
-
+    
     # save the process
     file_name = '/home/jason/data_pool/sample_data/processed_list.json'
     with open(file_name, 'w') as fp:
@@ -88,7 +91,6 @@ def processing_statistics():
 
 if __name__ == '__main__':
     
-    seconds = 3600
     print("Process list will be maked.")
     while 1==1:
         processing_statistics()
