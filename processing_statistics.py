@@ -44,20 +44,24 @@ def processing_statistics():
     # extract the process path
     processed_root = os.path.join('/home/jason', 'tq-data*', 'landsat_sr', '*', '01', '*', '*', '*')
     processed_list = glob.glob(processed_root)
-    
+
     # find the sucess and fail
-    processed_list_fail = {'Processed_list_fail': []}
-    list_fail = []
-    processed_list_sucess = {'Processed_list_sucess': []}
-    list_sucess = []
+    processed_list_fail = []
+    processed_list_sucess = []
+
     for tmp in processed_list:
-        if len([fps for fps in os.listdir(tmp) if '_sr_' in fps ]) == 16: # 11
-            list_sucess.extend(tmp[tmp.find('jason')+6:])
+        if len([fps for fps in os.listdir(tmp) if '_sr_' in fps ]) == 16:
+            processed_list_sucess.append(tmp[tmp.find('jason')+6:])       
         else:
-            list_fail.extend(tmp[tmp.find('jason')+6:])
-    print(len(list_sucess),len(list_fail))
-    processed_list_sucess['Processed_list_sucess'] = list_sucess
-    processed_list_fail['Processed_list_fail'] = list_fail
+            processed_list_fail.append(tmp[tmp.find('jason')+6:])
+    
+    file_sucess = '/home/jason/data_pool/sample_data/processed_list_sucess.txt'
+    with open(file_sucess, 'w') as fp:
+         fp.write(str(processed_list_sucess) + '\n')
+
+    file_fail = '/home/jason/data_pool/sample_data/processed_list_fail.txt'
+    with open(file_fail, 'w') as fp:
+         fp.write(str(processed_list_fail) + '\n')
 
     # print total
     star40 = '*'*75
@@ -73,7 +77,6 @@ def processing_statistics():
     # extract the year process list
     year = list(range(2010, 2019))
     for y in year:
-        print("process %s data ...." % str(y))
         if y < 2013:
             sr_status['LT05']['Processed_list'][str(y)] = [pl for pl in processed_list if '/LT05/' in pl[:-15] and str(y) in pl[:-15]]
             sr_status['LE07']['Processed_list'][str(y)] = [pl for pl in processed_list if '/LE07/' in pl[:-15] and str(y) in pl[:-15]]
@@ -91,8 +94,8 @@ def processing_statistics():
     print("LE07:\n*---->2017:%d\n*---->2016:%d\n*---->2015:%d\n*---->2014:%d\n*---->2013:%d\n*---->2012:%d\n*---->2011:%d\n*---->2010:%d\n" %
           (len(sr_status['LE07']['Processed_list']['2017']), len(sr_status['LE07']['Processed_list']['2016']),
           len(sr_status['LE07']['Processed_list']['2015']), len(sr_status['LE07']['Processed_list']['2014']),
-          len(sr_status['LE07']['Processed_list']['2013']),len(sr_status['LE07']['Processed_list']['2012']),
-          len(sr_status['LE07']['Processed_list']['2011']),len(sr_status['LE07']['Processed_list']['2010'])))
+          len(sr_status['LE07']['Processed_list']['2013']), len(sr_status['LE07']['Processed_list']['2012']),
+          len(sr_status['LE07']['Processed_list']['2011']), len(sr_status['LE07']['Processed_list']['2010'])))
     print("LT05:\n*---->2012:%d\n*---->2011:%d\n*---->2010:%d\n" %
           (len(sr_status['LT05']['Processed_list']['2012']), len(sr_status['LT05']['Processed_list']['2011']),
           len(sr_status['LT05']['Processed_list']['2010'])))      
@@ -101,15 +104,7 @@ def processing_statistics():
     # save the process
     file_name = '/home/jason/data_pool/sample_data/processed_list.json'
     with open(file_name, 'w') as fp:
-        json.dump(sr_status, fp, ensure_ascii=False, indent=4)       
-
-    file_name = '/home/jason/data_pool/sample_data/processed_list_sucess.json'
-    with open(file_name, 'w') as fp:
-        json.dump(processed_list_sucess, fp, ensure_ascii=False, indent=4)
-
-    file_name = '/home/jason/data_pool/sample_data/processed_list_fail.json'
-    with open(file_name, 'w') as fp:
-        json.dump(processed_list_fail, fp, ensure_ascii=False, indent=4)
+        json.dump(sr_status, fp, ensure_ascii=False, indent=4)  
 
 if __name__ == '__main__':
     
