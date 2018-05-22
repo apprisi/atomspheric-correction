@@ -42,18 +42,22 @@ def processing_statistics():
     """
 
     # extract the process path
-    processed_root = os.path.join('/home/jason', '*', 'landsat_sr', '*', '01', '*', '*', '*')
+    processed_root = os.path.join('/home/jason', 'tq-data*', 'landsat_sr', '*', '01', '*', '*', '*')
     processed_list = glob.glob(processed_root)
     
     # find the sucess and fail
-    processed_list_fail = []
-    processed_list_sucess = []
+    processed_list_fail = {'Processed_list_fail': []}
+    list_fail = []
+    processed_list_sucess = {'Processed_list_sucess': []}
+    list_sucess = []
     for tmp in processed_list:
         if len([fps for fps in os.listdir(tmp) if '_sr_' in fps ]) == 16: # 11
-            processed_list_sucess.extend(tmp)
+            list_sucess.extend(tmp[tmp.find('jason')+6:])
         else:
-            processed_list_fail.extend(tmp)
-
+            list_fail.extend(tmp[tmp.find('jason')+6:])
+    print(len(list_sucess),len(list_fail))
+    processed_list_sucess['Processed_list_sucess'] = list_sucess
+    processed_list_fail['Processed_list_fail'] = list_fail
 
     # print total
     star40 = '*'*75
@@ -101,11 +105,11 @@ def processing_statistics():
 
     file_name = '/home/jason/data_pool/sample_data/processed_list_sucess.json'
     with open(file_name, 'w') as fp:
-        json.dump(processed_list_sucess, fp, ensure_ascii=False, indent=4) 
+        json.dump(processed_list_sucess, fp, ensure_ascii=False, indent=4)
 
-        file_name = '/home/jason/data_pool/sample_data/processed_list_fail.json'
+    file_name = '/home/jason/data_pool/sample_data/processed_list_fail.json'
     with open(file_name, 'w') as fp:
-        json.dump(processed_list_fail, fp, ensure_ascii=False, indent=4) 
+        json.dump(processed_list_fail, fp, ensure_ascii=False, indent=4)
 
 if __name__ == '__main__':
     

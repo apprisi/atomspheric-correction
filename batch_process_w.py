@@ -274,10 +274,8 @@ if __name__ == '__main__':
     # hostname = 'data2'
     # process_dict = [data_path for data_path in process_dict if hostname in data_path]
     #process the data
-    data_path = 'data_pool/test_data/LC08/01/013/027/LC08_L1GT_013027_20161008_20170220_01_T2'
-    path = atomCorrectPre(os.path.join(r'/home/jason', data_path), result_root)
-    atomCorrectProcess(path)
-    # Parallel(n_jobs=14)(delayed(batch_process)(os.path.join(r'/home/jason', data_path), result_root) for data_path in process_dict)
+
+    Parallel(n_jobs=3)(delayed(batch_process)(os.path.join(r'/home/jason', data_path), result_root) for data_path in process_dict)
     end = time.time()
     print("Task runs %0.2f seconds" % (end - start))
 
