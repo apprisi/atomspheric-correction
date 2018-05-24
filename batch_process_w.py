@@ -105,15 +105,11 @@ def atomCorrectProcess(data_path):
         print("%s is not a file directory" % data_path)
         return -1
     else:
-        print("Converting the data.......\n")
-
-    # change the directory, convert to ESPA
-    os.chdir(data_path)  
+        print("Converting the data.......\n") 
 
     # change the directory, convert to ESPA
     os.chdir(data_path)  
     mtl_txt = glob.glob('*_MTL.txt')[0] # find MTL filename
-    print(mtl_txt)
     ret1 = subprocess.run(['convert_lpgs_to_espa', '--mtl', mtl_txt])
 
     if (ret1.returncode != 0):
@@ -266,16 +262,19 @@ if __name__ == '__main__':
         os.makedirs(result_root)
 
     # load the scence of path
-    with open(r'/home/jason/data_pool/sample_data/SRC_DATA_JSON/2017-le07_valid.json', 'r') as fp:
-        process_dict = json.load(fp)
+    # with open(r'/home/jason/data_pool/sample_data/SRC_DATA_JSON/2017-le07_valid.json', 'r') as fp:
+    #     process_dict = json.load(fp)
     # with open(r'/home/jason/data_pool/sample_data/SRC_DATA_JSON/valid_list_data2.json', 'r') as fp:
     #     process_dict += json.load(fp)
     #with open('/etc/hosts','r') as hp:
     # hostname = 'data2'
     # process_dict = [data_path for data_path in process_dict if hostname in data_path]
     #process the data
-
-    Parallel(n_jobs=3)(delayed(batch_process)(os.path.join(r'/home/jason', data_path), result_root) for data_path in process_dict)
+    data_path = '/home/jason/data_pool/test_data/LC08/01/013/027/LC08_L1GT_013027_20161008_20170220_01_T2'
+    flag = atomCorrectPre(data_path, result_root)
+    flag1 = atomCorrectProcess(flag)
+    print(flag1)
+    # Parallel(n_jobs=3)(delayed(batch_process)(os.path.join(r'/home/jason', data_path), result_root) for data_path in process_dict)
     end = time.time()
     print("Task runs %0.2f seconds" % (end - start))
 

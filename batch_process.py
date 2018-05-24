@@ -213,9 +213,8 @@ def batch_process(data_path, result_root):
     """
 
     # atomspheric correct preprocess
-    process_list = glob.glob(os.path.join(result_root,'landsat_sr', '01', '*', '*', '*'))
-    print("------>Total:%s Process:%s, Percentage:%.0f\n" %
-            (len(process_dict), len(process_list), 100*len(process_list)/len(process_dict))) 
+    # process_list = glob.glob(os.path.join(result_root,'landsat_sr', '01', '*', '*', '*'))
+    print("------>Total:%s Process:%s, Percentage:%.0f\n" % len(process_dict)) 
     
     flag = atomCorrectPre(data_path, result_root)
     if flag == -1:
@@ -249,12 +248,12 @@ if __name__ == '__main__':
 
     start = time.time()
     # # deleted the empty dir and RT dir
-    # all_tmp = glob.glob(r'/home/jason/tq-data03/landsat_sr/LE07/*/*/*/*')
+    # all_tmp = glob.glob(r'/home/jason/tq-data*/landsat_sr/*/01/*/*/*')
     # print(len(all_tmp))
     # for tmp in all_tmp:
     #     if not os.listdir(tmp):
     #         os.rmdir(tmp)
-    # a_tmp = glob.glob(r'/home/jason/tq-data03/landsat_sr/LE07/*/*/*/*')
+    # a_tmp = glob.glob(r'/home/jason/tq-data*/landsat_sr/*/01/*/*/*')
     # print(len(a_tmp))
     
     # a_tmp = glob.glob(r'/home/jason/tq-data03/landsat_sr/LE07/*/*/*/*')
