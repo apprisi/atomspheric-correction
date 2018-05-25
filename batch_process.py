@@ -247,33 +247,33 @@ def batch_process(data_path, result_root):
 if __name__ == '__main__':
 
     start = time.time()
-    # # deleted the empty dir and RT dir
-    # all_tmp = glob.glob(r'/home/jason/tq-data*/landsat_sr/*/01/*/*/*')
-    # print(len(all_tmp))
-    # for tmp in all_tmp:
-    #     if not os.listdir(tmp):
-    #         os.rmdir(tmp)
-    # a_tmp = glob.glob(r'/home/jason/tq-data*/landsat_sr/*/01/*/*/*')
-    # print(len(a_tmp))
+    # deleted the empty dir and RT dir
+    all_tmp = glob.glob(r'/home/jason/tq-data*/landsat_sr/*/01/*/*/*')
+    print(len(all_tmp))
+    for tmp in all_tmp:
+        if not os.listdir(tmp):
+            os.rmdir(tmp)
+    a_tmp = glob.glob(r'/home/jason/tq-data*/landsat_sr/*/01/*/*/*')
+    print(len(a_tmp))
     
     # a_tmp = glob.glob(r'/home/jason/tq-data03/landsat_sr/LE07/*/*/*/*')
     # print(len(a_tmp))
     
     # set the output path
-    result_root = r'/home/jason/tq-data03/landsat_sr'
-    if os.path.exists(result_root):
-        print("%s result root is ok." % result_root)
-    else:
-        os.makedirs(result_root)
+    # result_root = r'/home/jason/tq-data03/landsat_sr'
+    # if os.path.exists(result_root):
+    #     print("%s result root is ok." % result_root)
+    # else:
+    #     os.makedirs(result_root)
 
-    # load the scence of path
-    with open(r'/home/jason/data_pool/sample_data/SRC_DATA_JSON/2017-le07_valid.json', 'r') as fp:
-        process_dict = json.load(fp)
+    # # load the scence of path
+    # with open(r'/home/jason/data_pool/sample_data/SRC_DATA_JSON/2017-le07_valid.json', 'r') as fp:
+    #     process_dict = json.load(fp)
     #with open('/etc/hosts','r') as hp:
     #hostname = 'data2'
     #process_dict = [data_path for data_path in process_dict if hostname in data_path]
     #process the data
-    Parallel(n_jobs=3)(delayed(batch_process)(os.path.join(r'/home/jason', data_path), result_root) for data_path in process_dict)
+    #Parallel(n_jobs=3)(delayed(batch_process)(os.path.join(r'/home/jason', data_path), result_root) for data_path in process_dict)
     end = time.time()
     print("Task runs %0.2f seconds" % (end - start))
 
