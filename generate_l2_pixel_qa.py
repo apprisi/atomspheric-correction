@@ -32,6 +32,18 @@ def generate_l2_pixel_qa(data_path):
         print("process the data.......\n")
 
         os.chdir(data_path)  # change the directory
+        print('woring path: %s' % os.getcwd()) # print woring path
+        
+        # cheack atomspheric process sucess
+        if os.path.exists(data_path):
+            print(data_path + ' will be check!')
+            if len([fps for fps in os.listdir(data_path) if '_sr_' in fps]) == 16:
+                print(data_path + 'to process the BQA!')
+            else:
+                return 1
+        else:
+            print(data_path + ' is wrong!')
+            return 1
 
         # produce the file
         xml = os.path.split(data_path)[-1] + '.xml'
@@ -42,7 +54,7 @@ def generate_l2_pixel_qa(data_path):
                 return 0
             else:
                 print("%s failed to generate pixel_qa!" % data_path)
-                return 0
+                return 1
         else:
             print("%s has no file %s", (data_path, xml))
             return 1
@@ -144,21 +156,21 @@ if __name__ == '__main__':
     data_path = glob.glob(os.path.join('/home/jason/data_pool/test_data' , '*', '*'))
     start = time.time()
 
-    # for tmp in [dp for dp in data_path if '.tar' not in dp]:
-    #     flags = generate_l2_pixel_qa(tmp)
-    #     if flags == 0:
-    #         print(tmp + 'generate l2 pixel_qa sucess.')
-    #     elif flags == 1:
-    #         print(tmp + 'generate l2 pixel_qa failed!')
-    #         continue
-
-    for tmp in data_path:
-        print(tmp)
-        flag = creat_clear_mask(tmp)
-        if flag == 0:
-            print(tmp + ' generate clear mask sucess.')
-        elif flag ==1:
-            print(tmp + ' failed to generate clear mask!')
+    for tmp in [dp for dp in data_path if '.tar' not in dp]:
+        flags = generate_l2_pixel_qa(tmp)
+        if flags == 0:
+            print(tmp + 'generate l2 pixel_qa sucess.')
+        elif flags == 1:
+            print(tmp + 'generate l2 pixel_qa failed!')
             continue
+
+    # for tmp in data_path:
+    #     print(tmp)
+    #     flag = creat_clear_mask(tmp)
+    #     if flag == 0:
+    #         print(tmp + ' generate clear mask sucess.')
+    #     elif flag ==1:
+    #         print(tmp + ' failed to generate clear mask!')
+    #         continue
     end = time.time()
     print("Task runs %0.2f seconds" % (end - start))

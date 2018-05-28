@@ -108,12 +108,13 @@ def atomCorrectProcess(data_path):
         print("Converting the data.......\n")
 
     # change the directory, convert to ESPA
-    os.chdir(data_path)
-    mtl_txt = glob.glob('*_MTL.txt')[0] # find MTL filename
+    os.chdir(data_path)  
+    print("atomcorrect process:working path is" + os.getcwd())
+    mtl_txt = glob.glob("*_MTL.txt")[0] # find MTL filename
+    print(mtl_txt)
     ret1 = subprocess.run(['convert_lpgs_to_espa', '--mtl', mtl_txt])
-
-    if (ret1.returncode != 0):
-        print("%s data format conversion failed!\n" % mtl_txt)
+    if ret1.returncode != 0:
+        print(mtl_txt + ' data format conversion failded')
         return 1
     else:
         print("%s data format conversion completed!\n" % mtl_txt)
@@ -217,6 +218,10 @@ def batch_process(data_path, result_root):
     if flag == -1:
         print(data_path + " preprocess failed!\n")
         return 1
+    flag = atomCorrectPre(data_path, result_root)
+    if flag == -1:
+        print(data_path + " preprocess failed!\n")
+        return 1
     elif flag == 0:
         print(data_path + " has been processed.\n")
         return 0
@@ -266,8 +271,7 @@ if __name__ == '__main__':
         os.makedirs(result_root)
 
     # load the scence of path
-    imput_path = '/home/jason/data_pool/sample_data/SRC_DATA_JSON/LE07/valid_list_2010_2017_le07_tq03.json'
-    with open(imput_path, 'r') as fp:
+    with open(r'/home/jason/data_pool/sample_data/SRC_DATA_JSON/LT05/valid_list_2010_lt05.json', 'r') as fp:
         process_dict = json.load(fp)
     # with open(r'/home/jason/data_pool/sample_data/SRC_DATA_JSON/valid_list_data2.json', 'r') as fp:
     #     process_dict += json.load(fp)
@@ -275,6 +279,7 @@ if __name__ == '__main__':
     # hostname = 'data2'
     # process_dict = [data_path for data_path in process_dict if hostname in data_path]
     #process the data
+
     Parallel(n_jobs=3)(delayed(batch_process)(os.path.join(r'/home/jason', data_path), result_root) for data_path in process_dict)
     end = time.time()
     print("Task runs %0.2f seconds" % (end - start))

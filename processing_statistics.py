@@ -1,4 +1,3 @@
-
 #!/usr/bin/#!/usr/bin/env python3
 import os
 import time
@@ -54,7 +53,8 @@ def processing_statistics():
             processed_list_sucess.append(tmp[tmp.find('jason')+6:])       
         else:
             processed_list_fail.append(tmp[tmp.find('jason')+6:])
-    
+
+    print("sucess " + len(process_list_sucess))
     file_sucess = '/home/jason/data_pool/sample_data/processed_list_sucess.txt'
     with open(file_sucess, 'w') as fp:
          fp.write(str(processed_list_sucess) + '\n')
@@ -78,11 +78,11 @@ def processing_statistics():
     year = list(range(2010, 2019))
     for y in year:
         if y < 2013:
-            sr_status['LT05']['Processed_list'][str(y)] = [pl for pl in processed_list if 'LT05_' in pl[:-18] and str(y) in pl[:-18]]
-            sr_status['LE07']['Processed_list'][str(y)] = [pl for pl in processed_list if 'LE07_' in pl[:-18] and str(y) in pl[:-18]]
+            sr_status['LT05']['Processed_list'][str(y)] = [pl for pl in processed_list_sucess if 'LT05_' in pl[:-18] and str(y) in pl[:-18]]
+            sr_status['LE07']['Processed_list'][str(y)] = [pl for pl in processed_list_sucess if 'LE07_' in pl[:-18] and str(y) in pl[:-18]]
         elif y >= 2013:
-            sr_status['LC08']['Processed_list'][str(y)] = [pl for pl in processed_list if 'LC08_' in pl[:-18] and str(y) in pl[:-18]]
-            sr_status['LE07']['Processed_list'][str(y)] = [pl for pl in processed_list if 'LE07_' in pl[:-18] and str(y) in pl[:-18]]
+            sr_status['LC08']['Processed_list'][str(y)] = [pl for pl in processed_list_sucess if 'LC08_' in pl[:-18] and str(y) in pl[:-18]]
+            sr_status['LE07']['Processed_list'][str(y)] = [pl for pl in processed_list_sucess if 'LE07_' in pl[:-18] and str(y) in pl[:-18]]
     
     # print result
     star18 = '*'*30
