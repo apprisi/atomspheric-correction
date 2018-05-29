@@ -54,7 +54,7 @@ def processing_statistics():
         else:
             processed_list_fail.append(tmp[tmp.find('jason')+6:])
 
-    print("sucess " + len(process_list_sucess))
+    print(len(processed_list_sucess))
     file_sucess = '/home/jason/data_pool/sample_data/processed_list_sucess.txt'
     with open(file_sucess, 'w') as fp:
          fp.write(str(processed_list_sucess) + '\n')
