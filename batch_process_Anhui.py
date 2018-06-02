@@ -34,56 +34,29 @@ def atomCorrectPre(data_path, result_root):
     else:
         print("Preprocess the data: %s\n" % data_path)
 
-    # check the result
-    tq_data03 = os.path.join(result_root, data_path[data_path.find('landsat/')+8:])
-    if os.path.exists(tq_data03): #check tq03
-        print(tq_data03 + " folder is exist and it will be check!" )
-        if len([ fps for fps in os.listdir(tq_data03) if '_sr_' in fps]) == 16:
-            print(data_path + ' has been procesed!')
-            return 0
-        else:
-            shutil.rmtree(tq_data03)
+    os.chdir(data_path)  # change the directory
 
-    tq_data01 = tq_data03.replace('tq-data03', 'tq-data01')
-    if os.path.exists(tq_data01): #check tq01
-        print(tq_data01 + " folder is exist and it will be check!")
-        if len([ fps for fps in os.listdir(tq_data01) if '_sr_' in fps]) == 16:
-            print(data_path + ' has been procesed!')
-            return 0
-        else:
-            shutil.rmtree(tq_data01)
+    result_path = os.path.join(result_root, data_path[data_path.find('landsat/')+8:])
+    print(result_path)
 
-    tq_data02 = tq_data03.replace('tq-data03', 'tq-data02')
-    if os.path.exists(tq_data02): #check tq02
-        print(tq_data02 + "folder is exist and it will be check!")
-        if len([ fps for fps in os.listdir(tq_data02) if '_sr_' in fps]) == 16:
-            print(data_path + ' has been procesed!')
-            return 0
-        else:
-            shutil.rmtree(tq_data02)
-        
-    tq_data04 = tq_data03.replace('tq-data03', 'tq-data04')
-    if os.path.exists(tq_data04):#check tq04
-        print(tq_data04 + "folder is exist and it will be check!")
-        if len([ fps for fps in os.listdir(tq_data04) if '_sr_' in fps]) == 16:
-            print(data_path + ' has been procesed!')
-            return 0
-        else:
-            shutil.rmtree(tq_data04)
-   
-    
-    # after check, then can run the proprecess
-    tq_tmp = tq_data03.replace('tq-data03', 'tq-tmp')
+    # check the path and file
+    tq_tmp = result_path.replace('tq-data04', 'tq-tmp')
     if not os.path.exists(tq_tmp):
         os.makedirs(tq_tmp)
-    if not os.path.exists(tq_data03):
-        os.makedirs(tq_data03) 
-        print("Creat folder is ok!")
-        
-    # change the path
-    os.chdir(data_path)
-    print("Working path is " + os.getcwd())
-        
+        print(tq_tmp)
+
+    if not os.path.exists(result_path):
+        os.makedirs(result_path) 
+        print("Creat folder is ok!")  
+
+    elif os.path.exists(result_path):
+        print("Folder is exist and it will be check!")
+        if len([ fps for fps in os.listdir(result_path) if '_sr_' in fps]) == 16:
+            print("%s maybe has been processed!" % result_path)
+            return 0
+        else:
+            print("%s is empty or not converted!" % result_path)
+
     # copy the txt to result path and convert the TIFF
     txt_list = glob.glob('*.txt')
     tif_list = glob.glob('*.TIF')
@@ -132,15 +105,13 @@ def atomCorrectProcess(data_path):
     else:
         print("Converting the data.......\n")
 
-
     # change the directory, convert to ESPA
     os.chdir(data_path)  
-    print("[iatomCorrectProcess]:Working path is " + os.getcwd())
     mtl_txt = glob.glob('*_MTL.txt')[0] # find MTL filename
     print(mtl_txt)
     ret1 = subprocess.run(['convert_lpgs_to_espa', '--mtl', mtl_txt])
 
-    if (ret1.returncode != 0):
+    if ret1.returncode != 0:
         print("%s data format conversion failed!\n" % mtl_txt)
         return 1
     else:
@@ -148,7 +119,7 @@ def atomCorrectProcess(data_path):
 
     # atomspheric correct
     mtl_xml = glob.glob('*.xml')[0] # read XML
-    if ('LC08' in mtl_xml):
+    if 'LC08' in mtl_xml:
         ret2 = subprocess.run(['do_lasrc.py', '--xml', mtl_xml])
         if (ret2.returncode == 0):
             print("%s data atomospheric correction processing finished!\n" % mtl_xml)
@@ -156,7 +127,7 @@ def atomCorrectProcess(data_path):
         else:
             print("%s data atomospheric correction processing failure!\n" % mtl_xml)
             return 1
-    if ('LE07' in mtl_xml or 'LT05' in mtl_xml):
+    elif 'LE07' in mtl_xml or 'LT05' in mtl_xml:
         ret2 = subprocess.run(['do_ledaps.py', '--xml', mtl_xml])
         if (ret2.returncode == 0):
             print("%s data atomospheric correction processing finished!\n" % mtl_xml)
@@ -181,7 +152,7 @@ def atomCorrectPost(result_path):
         return 0, process sucess
         return -1, data not exists
     """
-    remote_path = result_path.replace('tq-tmp','tq-data03')
+    remote_path = result_path.replace('tq-tmp','tq-data04')
     if not os.path.exists(result_path):
         print("%s file path does not exist!\n" % result_path)
         return -1
@@ -192,6 +163,8 @@ def atomCorrectPost(result_path):
         print("deleted the data.......\n")
 
     os.chdir(result_path)
+
+    # deleted the temp data
     if 'LC08' in result_path:
         tif_list = glob.glob('*_B*.TIF')
         img_list = glob.glob('*_b[1-9]*')
@@ -201,7 +174,7 @@ def atomCorrectPost(result_path):
                 os.remove(deleted_list)
             else:
                 print("no such file:%s" % deleted_list)
-    elif 'LE07' in result_path or 'LT05' in result_path:
+    elif 'LE07' or 'LT05' in result_path:
         tif_list = glob.glob('*_B*.TIF')
         img_list = glob.glob('*_b[1-9]*')
         toa_list = glob.glob('*_toa_*')
@@ -214,9 +187,37 @@ def atomCorrectPost(result_path):
     else:
         print(result_path + "no file need to remove!\n")
    
+    # generate the pixel_qa
+    print('Working path: %s' % os.getcwd()) # print woring path
+
+    pixel_qa = glob.glob('*_pixel_qa.img')  # check
+    if len(pixel_qa) < 1:
+        print(result_path + ' will be generate the pixel_qa!')
+    elif len(pixel_qa)==1:
+        print(result_path + ' has been processed!')
+        return 0
+
+    xml_list = glob.glob('*.xml') # check
+    if len(xml_list) < 1:
+        print("NO XML!")
+        return 1
+    elif len(xml_list)==1:
+        xml = xml_list[0]
+    
+    ret1 = subprocess.run(['generate_pixel_qa', '--xml', xml])
+    if (ret1.returncode == 0):
+        print("%s generate pixel_qa sucessfully!" % result_path)
+    else:
+        print("%s failed to generate pixel_qa!" % result_path)
+        return 1
+
+
+    # copy the data 
     if remote_path[-1] == '/':
         remote_path = remote_path[:-1]
+    print(remote_path)    
     shutil.rmtree(remote_path)
+    print(result_path)
     shutil.move(result_path,'/'.join(remote_path.split('/')[:-1]))
     return 0
 
@@ -236,7 +237,8 @@ def batch_process(data_path, result_root):
 
     # atomspheric correct preprocess
     # process_list = glob.glob(os.path.join(result_root,'landsat_sr', '01', '*', '*', '*'))
-    print("------>Total:%s\n" % len(process_dict))
+    print("------>Total:%s " % len(process_dict)) 
+    
     flag = atomCorrectPre(data_path, result_root)
     if flag == -1:
         print(data_path + " preprocess failed!\n")
@@ -261,30 +263,41 @@ def batch_process(data_path, result_root):
         elif flag1 == -1:
             print("%s does not exist!\n" % flag)
             return 1
-        elif flag1 == 1:
+        elif flag1 == 0:
             print("%s atomspheric correction is failure!\n" % flag)
             return 1
-        else:
-            print(flag1)
 
 if __name__ == '__main__':
 
-    start = time.time()
-    result_root = r'/home/jason/tq-data03/landsat_sr'
-    
+    start = time.time()    
+    # set the output path
+    result_root = r'/home/jason/tq-data04/Anhui/landsat_sr'
     if os.path.exists(result_root):
         print("%s result root is ok." % result_root)
     else:
         os.makedirs(result_root)
 
-    with open(r'/home/jason/data_pool/sample_data/SRC_DATA_JSON/LE07/valid_list_2012_le07_final.json', 'r') as fp:
+    # load the scence of path
+    with open(r'/home/jason/data_pool/sample_data/SRC_DATA_JSON/Anhui/valid_list_2016_Anhui_lc08.json', 'r') as fp:
         process_dict = json.load(fp)
-    #with open(r'/home/jason/data_pool/sample_data/SRC_DATA_JSON/LE07/valid_list_2011_le07_final.json', 'r') as fp:
-    #    process_dict += json.load(fp)
+    with open(r'/home/jason/data_pool/sample_data/SRC_DATA_JSON/Anhui/valid_list_2015_Anhui_lc08.json', 'r') as fp:
+        process_dict += json.load(fp)
+    with open(r'/home/jason/data_pool/sample_data/SRC_DATA_JSON/Anhui/valid_list_2014_Anhui_lc08.json', 'r') as fp:
+        process_dict += json.load(fp)
+    with open(r'/home/jason/data_pool/sample_data/SRC_DATA_JSON/Anhui/valid_list_2013_Anhui_lc08.json', 'r') as fp:
+        process_dict += json.load(fp)
 
-    # hostname = 'data2'
-    # process_dict = [data_path for data_path in process_dict if hostname in data_path]
+    # find the list
+    # process_list = [] # save the path
+    # for tmp_data in process_dict['scenes']:
+    #         if tmp_data['cloud_perc'] <= 9:
+    #             print(tmp_data['relative_path'] + "add to the list" )
+    #             process_list.append(tmp_data['relative_path'])
 
+    #with open('/etc/hosts','r') as hp:
+    #hostname = 'data2'
+    #process_dict = [data_path for data_path in process_dict if hostname in data_path]
+    #process the data
     Parallel(n_jobs=3)(delayed(batch_process)(os.path.join(r'/home/jason', data_path), result_root) for data_path in process_dict)
     end = time.time()
     print("Task runs %0.2f seconds" % (end - start))

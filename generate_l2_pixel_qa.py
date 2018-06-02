@@ -4,7 +4,9 @@ import os
 import glob
 import subprocess
 import gdal
+import json
 import numpy as np
+from joblib import Parallel,delayed
 
 
 def generate_l2_pixel_qa(data_path):
@@ -31,33 +33,150 @@ def generate_l2_pixel_qa(data_path):
     else:
         print("process the data.......\n")
 
-        os.chdir(data_path)  # change the directory
-        print('woring path: %s' % os.getcwd()) # print woring path
-        
-        # cheack atomspheric process sucess
-        if os.path.exists(data_path):
-            print(data_path + ' will be check!')
-            if len([fps for fps in os.listdir(data_path) if '_sr_' in fps]) == 16:
-                print(data_path + 'to process the BQA!')
-            else:
-                return 1
-        else:
-            print(data_path + ' is wrong!')
-            return 1
+    # check the result
+    tq_data03 = os.path.join('/home/jason/tq-data03/landsat_sr', data_path[data_path.find('landsat/')+8:])
+    if os.path.exists(tq_data03): #check tq03
+        print(tq_data03 + " folder is exist and it will be check!" )
+        if len([ fps for fps in os.listdir(tq_data03) if '_sr_' in fps]) == 16:
+            print(data_path + ' has been procesed!')
+            
+            os.chdir(tq_data03)  # change the directory
+            print('woring path: %s' % os.getcwd()) # print woring path
 
-        # produce the file
-        xml = os.path.split(data_path)[-1] + '.xml'
-        if os.path.isfile(xml):
-            ret1 = subprocess.run(['generate_pixel_qa', '--xml', xml])
-            if (ret1.returncode == 0):
-                print("%s generate pixel_qa sucessfully!" % data_path)
+            pixel_qa = glob.glob('*_pixel_qa.img')  # read XML
+            if len(pixel_qa) < 1:
+                print(tq_data03 + ' will be generate the pixel_qa!')
+            elif len(pixel_qa)==1:
+                print(tq_data03 + ' has been processed!')
                 return 0
-            else:
-                print("%s failed to generate pixel_qa!" % data_path)
+
+            # produce the file
+            xml_list = glob.glob('*.xml')
+            if len(xml_list) < 1:
+                print("NO XML!")
                 return 1
-        else:
-            print("%s has no file %s", (data_path, xml))
-            return 1
+            elif len(xml_list)==1:
+                xml = xml_list[0]
+
+            if os.path.isfile(xml):
+                ret1 = subprocess.run(['generate_pixel_qa', '--xml', xml])
+                if (ret1.returncode == 0):
+                    print("%s generate pixel_qa sucessfully!" % tq_data03)
+                    return 0
+                else:
+                    print("%s failed to generate pixel_qa!" % tq_data03)
+                    return 1
+            else:
+                print("%s has no file %s" % (tq_data03, xml))
+                return 1
+
+    tq_data01 = tq_data03.replace('tq-data03', 'tq-data01')
+    if os.path.exists(tq_data01): #check tq01
+        print(tq_data01 + " folder is exist and it will be check!")
+        if len([ fps for fps in os.listdir(tq_data01) if '_sr_' in fps]) == 16:
+            print(data_path + ' has been procesed!')
+
+            os.chdir(tq_data01)  # change the directory
+            print('Working path: %s' % os.getcwd()) # print woring path
+
+            pixel_qa = glob.glob('*_pixel_qa.img')  # read XML
+            if len(pixel_qa) < 1:
+                print(tq_data03 + ' will be generate the pixel_qa!')
+            elif len(pixel_qa)==1:
+                print(tq_data03 + ' has been processed!')
+                return 0
+
+            # produce the file
+            xml_list = glob.glob('*.xml')
+            if len(xml_list) < 1:
+                print("NO XML!")
+                return 1
+            elif len(xml_list)==1:
+                xml = xml_list[0] 
+
+            if os.path.isfile(xml):
+                ret1 = subprocess.run(['generate_pixel_qa', '--xml', xml])
+                if (ret1.returncode == 0):
+                    print("%s generate pixel_qa sucessfully!" % tq_data01)
+                    return 0
+                else:
+                    print("%s failed to generate pixel_qa!" % tq_data01)
+                    return 1
+            else:
+                print("%s has no file %s" % (tq_data01, xml))
+                return 1
+
+    tq_data02 = tq_data03.replace('tq-data03', 'tq-data02')
+    if os.path.exists(tq_data02): #check tq02
+        print(tq_data02 + "folder is exist and it will be check!")
+        if len([ fps for fps in os.listdir(tq_data02) if '_sr_' in fps]) == 16:
+            print(data_path + ' has been procesed!')
+
+            os.chdir(tq_data02)  # change the directory
+            print('Working path: %s' % os.getcwd()) # print woring path
+
+            pixel_qa = glob.glob('*_pixel_qa.img')  # read XML
+            if len(pixel_qa) < 1:
+                print(tq_data03 + ' will be generate the pixel_qa!')
+            elif len(pixel_qa)==1:
+                print(tq_data03 + ' has been processed!')
+                return 0
+
+            # produce the file
+            xml_list = glob.glob('*.xml')
+            if len(xml_list) < 1:
+                print("NO XML!")
+                return 1
+            elif len(xml_list)==1:
+                xml = xml_list[0]
+
+            if os.path.isfile(xml):
+                ret1 = subprocess.run(['generate_pixel_qa', '--xml', xml])
+                if (ret1.returncode == 0):
+                    print("%s generate pixel_qa sucessfully!" % tq_data02)
+                    return 0
+                else:
+                    print("%s failed to generate pixel_qa!" % tq_data02)
+                    return 1
+            else:
+                print("%s has no file %s" % ( tq_data02, xml))
+                return 1
+        
+    tq_data04 = tq_data03.replace('tq-data03', 'tq-data04')
+    if os.path.exists(tq_data04):#check tq04
+        print(tq_data04 + "folder is exist and it will be check!")
+        if len([ fps for fps in os.listdir(tq_data04) if '_sr_' in fps]) == 16:
+            print(data_path + ' has been procesed!')
+
+            os.chdir(tq_data04)  # change the directory
+            print('woring path: %s' % os.getcwd()) # print woring path
+
+            pixel_qa = glob.glob('*_pixel_qa.img')  # read XML
+            if len(pixel_qa) < 1:
+                print(tq_data03 + ' will be generate the pixel_qa!')
+            elif len(pixel_qa)==1:
+                print(tq_data03 + ' has been processed!')
+                return 0
+
+            # produce the file
+            xml_list = glob.glob('*.xml')
+            if len(xml_list) < 1:
+                print("NO XML!")
+                return 1
+            elif len(xml_list)==1:
+                xml = xml_list[0]
+
+            if os.path.isfile(xml):
+                ret1 = subprocess.run(['generate_pixel_qa', '--xml', xml])
+                if (ret1.returncode == 0):
+                    print("%s generate pixel_qa sucessfully!" % tq_data04)
+                    return 0
+                else:
+                    print("%s failed to generate pixel_qa!" % tq_data04)
+                    return 1
+            else:
+                print("%s has no file %s" % (tq_data04, xml))
+                return 1
 
 def creat_clear_mask(data_path):
     '''
@@ -153,17 +272,17 @@ def creat_clear_mask(data_path):
     
 if __name__ == '__main__':
     
-    data_path = glob.glob(os.path.join('/home/jason/data_pool/test_data' , '*', '*'))
     start = time.time()
+    with open(r'/home/jason/data_pool/sample_data/SRC_DATA_JSON/LC08/valid_list_2016_lc08.json', 'r') as fp:
+        process_dict = json.load(fp)
+    with open(r'/home/jason/data_pool/sample_data/SRC_DATA_JSON/LC08/valid_list_2015_lc08.json', 'r') as fp:
+        process_dict += json.load(fp)
+    with open(r'/home/jason/data_pool/sample_data/SRC_DATA_JSON/LC08/valid_list_2014_lc08.json', 'r') as fp:
+        process_dict += json.load(fp)
+    with open(r'/home/jason/data_pool/sample_data/SRC_DATA_JSON/LC08/valid_list_2013_lc08.json', 'r') as fp:
+        process_dict += json.load(fp)
 
-    for tmp in [dp for dp in data_path if '.tar' not in dp]:
-        flags = generate_l2_pixel_qa(tmp)
-        if flags == 0:
-            print(tmp + 'generate l2 pixel_qa sucess.')
-        elif flags == 1:
-            print(tmp + 'generate l2 pixel_qa failed!')
-            continue
-
+    Parallel(n_jobs=3)(delayed(generate_l2_pixel_qa)(os.path.join(r'/home/jason', data_path)) for data_path in process_dict)
     # for tmp in data_path:
     #     print(tmp)
     #     flag = creat_clear_mask(tmp)

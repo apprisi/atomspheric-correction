@@ -4,6 +4,8 @@ import os
 import time
 import glob
 import json
+import shutil
+
 
 
 def find_error():
@@ -13,31 +15,46 @@ def find_error():
 
     # extract the process list\
     result_json = '/home/jason/data_pool/sample_data/processed_list.json'
-    process_list = []
     with open(result_json, 'r') as fp:
-        process_dict = json.load(fp)
+        processed_list = json.load(fp)
 
-    for i in ['LE07', 'LT05']:
-        for j in ['2010', '2011', '2012']:
-            process_list.extend(process_dict[i]['Processed_list'][j])
+    le07_list = processed_list['LE07']['Processed_list']['2017']
+    print("total processed list: %d" % len(le07_list)) 
 
-    for i in ['LE07', 'LC08']:
-        for j in ['2013', '2014', '2015', '2016', '2017']:
-            process_list.extend(process_dict[i]['Processed_list'][j])
+    le07_list_path = [dp[dp.find('landsat_sr')+11:] for dp in le07_list]
+    print(le07_list_path[0])
+    print("path total : %d" % len(le07_list_path))
+    
+    le07_set = set(le07_list_path) # to set
+    print("convert set: %d" % len(le07_set))
+    
+    # find the same data 
+    a = {}
+    for i in le07_list_path:
+        if le07_list_path.count(i) == 2:
+            a[i] = le07_list_path.count(i)
+    
+    # copy the same to list
+    L =['/home/jason/tq-data04/landsat_sr/' + key for key in a.keys()]
+    print("total: %d ,test: %s" % (len(L), L[0]))
+    for tmp in L:
+        shutil.rmtree(tmp)
 
-    print(len(process_list)) 
-
-    process_set = set(process_list)
-
-    processed_root = os.path.join('/home/jason', '*', 'landsat_sr', '*', '01', '*', '*', '*')
-    processed_list = glob.glob(processed_root)
-    print(len(processed_list))
-    processed_set = set(processed_list)
-
-    diff =  processed_set - process_set
-    print(len(diff))
-    for tmp in diff:
-        print(tmp)   
+    # process_json = '/home/jason/data_pool/sample_data/SRC_DATA_JSON/LE07/valid_list_2017_le07_final.json'
+    # with open(process_json, 'r') as fp:
+    #     process_list = json.load(fp)
+    
+    # print("process list: %d" % len(process_list))
+    # le07_process_list = [dp[dp.find('landsat')+8:-1] for dp in process_list]
+    # print(le07_process_list[0])
+    # process_set = set(le07_process_list)
+  
+    # print("process set: %d" % len(process_set))
+    
+    # diff =  le07_set - process_set
+    # print(len(diff))
+    # # for tmp in diff:
+    # #     print(tmp)   
 
 if __name__ == '__main__':
     
