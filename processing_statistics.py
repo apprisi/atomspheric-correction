@@ -41,8 +41,9 @@ def processing_statistics():
     """
 
     # extract the process path
-    processed_root = os.path.join('/home/jason', 'tq-data*', 'landsat_sr', '*', '01', '*', '*', '*')
+    processed_root = '/home/jason/tq-data*/landsat_sr/*/01/*/*/*'
     processed_list = glob.glob(processed_root)
+    print('Total file: %s ' % len(processed_list))
 
     # find the sucess and fail
     processed_list_fail = []
@@ -54,7 +55,9 @@ def processing_statistics():
         else:
             processed_list_fail.append(tmp[tmp.find('jason')+6:])
 
-    print(len(processed_list_sucess))
+    print('Sucess: %d ' % len(processed_list_sucess))
+
+    # save the list
     file_sucess = '/home/jason/data_pool/sample_data/processed_list_sucess.txt'
     with open(file_sucess, 'w') as fp:
          fp.write(str(processed_list_sucess) + '\n')

@@ -88,7 +88,30 @@ def extract_vaild_path(imput_json):
 if __name__ == '__main__':
 
     start = time.time()
-    imput_json = '/home/jason/data_pool/sample_data/SRC_DATA_JSON/LE07/2010-2017-le07.json'
-    extract_vaild_path(imput_json)
+
+    # open the file
+    imput_json = '/home/jason/data_pool/sample_data/SRC_DATA_JSON/LE07/valid_list_2013_le07_final.json'
+    with open(imput_json, 'r') as fp:
+        process_dict = json.load(fp)
+    
+    # dispart
+    valid_list_2013_tq01 =  [pl for pl in  process_dict if 'tq-data01' in pl]
+    process_dict_part1 = valid_list_2013_tq01[0:1500]
+    process_dict_part2 = valid_list_2013_tq01[1500:]
+    
+    # output
+    output_part1 = '/home/jason/data_pool/sample_data/SRC_DATA_JSON/LE07/valid_list_2013_le07_final_part1.json'
+    output_part2 = '/home/jason/data_pool/sample_data/SRC_DATA_JSON/LE07/valid_list_2013_le07_final_part2.json'    
+
+    if  len(process_dict_part1) > 0:   
+            with open(output_part1, 'w') as fp7:
+                json.dump(process_dict_part1, fp7, ensure_ascii=False, indent=2)
+            print('Valid data total %s in %s' % (len(process_dict_part1), imput_json))
+
+    if  len(process_dict_part2) > 0:
+        with open(output_part2, 'w') as fp5:
+            json.dump(process_dict_part2, fp5, ensure_ascii=False, indent=2)
+        print('Valid data total %s in %s' % (len(process_dict_part2), imput_json))
+
     end = time.time()
     print("Task runs %0.2f seconds" % (end - start))

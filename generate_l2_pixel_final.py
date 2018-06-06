@@ -55,21 +55,21 @@ def generate_l2_pixel_final(data_path):
     elif len(xml_list)==1:
         xml = xml_list[0]
 
-    # check the pixel
+    # check the pixel_qa 
     pixel_qa = glob.glob('*_pixel_qa.img')  # read XML
     if len(pixel_qa) < 1:
         print(data_path + ' will be generate the pixel_qa!')
     elif len(pixel_qa)==1:
         print(data_path + ' has been processed!')
-
-        # dilate_pixel_qa --xml --bit 5 --distance 3
-        ret1 = subprocess.run(['dilate_pixel_qa', '--xml', xml ,'--bit=5', '--distance=3']) # need check
-        if (ret1.returncode == 0):
-            print("%s dilate_pixel_qa sucessfully!" % data_path)
-            return 0
-        else:
-            print("%s failed to dilate_pixel_qa!" % data_path)
-            return 1
+        return 0
+        # # dilate_pixel_qa --xml --bit 5 --distance 3
+        # ret1 = subprocess.run(['dilate_pixel_qa', '--xml', xml ,'--bit=5', '--distance=3']) # need check
+        # if (ret1.returncode == 0):
+        #     print("%s dilate_pixel_qa sucessfully!" % data_path)
+        #     return 0
+        # else:
+        #     print("%s failed to dilate_pixel_qa!" % data_path)
+        #     return 1
 
     # produce the file
     ret1 = subprocess.run(['generate_pixel_qa', '--xml', xml])
@@ -91,12 +91,12 @@ def generate_l2_pixel_final(data_path):
 if __name__ == '__main__':
     
     start = time.time()
-    test = '/home/jason/tq-data*/landsat_sr/LC08/01/*/*/*'
-    data_path =glob.glob(test)
-    # for tmp in test_path[0:3]:
-    #     print(tmp)
-    #     generate_l2_pixel_final(tmp)
+    L5 = '/home/jason/tq-data*/landsat_sr/LT05/01/*/*/*'
+    L5_path =glob.glob(L5)
+    L8 = '/home/jason/tq-data*/landsat_sr/LC08/01/*/*/*'
+    L8_path =glob.glob(L8)
+    data_path = L5_path + L8_path
 
-    Parallel(n_jobs=4)(delayed(generate_l2_pixel_final)(tmp for tmp in data_path)
+    Parallel(n_jobs=4)(delayed(generate_l2_pixel_final)(tmp) for tmp in data_path)
     end = time.time()
     print("Task runs %0.2f seconds" % (end - start))
