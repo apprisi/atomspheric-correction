@@ -66,8 +66,8 @@ def combineL8AuxDataProcess(data_path, output_dir):
                 print("%s executed using time %.2f seconds" % (ret1.args, (end - start)))
 
 if __name__ == '__main__':
-    data_path = r'/home/jason/data_pool/modis'
-    output_dir = r'/home/jason/data_pool/lasrc_aux/LADS'
+    data_path = '/home/tq/data_pool/modis'
+    output_dir = '/home/tq/data_pool/lasrc_aux/LADS'
     start = time.time()
     flags = combineL8AuxDataProcess(data_path, output_dir)
     print("Process status:%s" % flags)

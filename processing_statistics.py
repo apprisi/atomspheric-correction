@@ -41,7 +41,7 @@ def processing_statistics():
     """
 
     # extract the process path
-    processed_root = '/home/jason/tq-data*/landsat_sr/*/01/*/*/*'
+    processed_root = '/home/tq/tq-data*/landsat_sr/*/01/*/*/*'
     processed_list = glob.glob(processed_root)
     print('Total file: %s ' % len(processed_list))
 
@@ -51,25 +51,25 @@ def processing_statistics():
 
     for tmp in processed_list:
         if len([fps for fps in os.listdir(tmp) if '_sr_' in fps ]) == 16:
-            processed_list_sucess.append(tmp[tmp.find('jason')+6:])       
+            processed_list_sucess.append(tmp[tmp.find('tq')+6:])       
         else:
-            processed_list_fail.append(tmp[tmp.find('jason')+6:])
+            processed_list_fail.append(tmp[tmp.find('tq')+6:])
 
     print('Sucess: %d ' % len(processed_list_sucess))
 
     # save the list
-    file_sucess = '/home/jason/data_pool/sample_data/processed_list_sucess.txt'
+    file_sucess = '/home/tq/data_pool/test_data/processed_list_sucess.txt'
     with open(file_sucess, 'w') as fp:
          fp.write(str(processed_list_sucess) + '\n')
 
-    file_fail = '/home/jason/data_pool/sample_data/processed_list_fail.txt'
+    file_fail = '/home/tq/data_pool/test_data/processed_list_fail.txt'
     with open(file_fail, 'w') as fp:
          fp.write(str(processed_list_fail) + '\n')
 
     # print total
     star40 = '*'*75
     time_stamp = datetime.datetime.now()
-    f = open('/home/jason/data_pool/sample_data/process_log.txt', 'a')
+    f = open('/home/tq/data_pool/test_data/process_log.txt', 'a')
     print("%s\n*  Total data: 85000, Total processed:%d, Processing Percentage:%.2f  *\n%s" %
          (star40, len(processed_list), 100*len(processed_list)/85000, star40))
 
@@ -105,13 +105,11 @@ def processing_statistics():
     print("%s" % star18)
     
     # save the process
-    file_name = '/home/jason/data_pool/sample_data/processed_list.json'
+    file_name = '/home/tq/data_pool/test_data/processed_list.json'
     with open(file_name, 'w') as fp:
         json.dump(sr_status, fp, ensure_ascii=False, indent=4)  
 
 if __name__ == '__main__':
     
     print("Process list will be maked.")
-    while 1==1:
-        processing_statistics()
-        time.sleep(3600)
+    processing_statistics()
