@@ -1,8 +1,9 @@
 #!/usr/bin/#!/usr/bin/env python3
 import os
 import time
-import glob
 import json
+import gc
+import xlrd
 
 
 def extract_vaild_path(imput_json):
@@ -11,10 +12,10 @@ def extract_vaild_path(imput_json):
     #     1. when cloud is more than 80, remove the data
 
     # input:
-    #     input_json: json file path, such as '/haome/tq/data_pool/2017-le07.json'
+    #     input_json: json file path, such as '/home/tq/data_pool/2017-le07.json'
 
     # output:
-    #     valid_path: json file path, such as '/haome/tq/data_pool/2017-le07_valid.json'
+    #     valid_path: json file path, such as '/home/tq/data_pool/2017-le07_valid.json'
 
     # """
 
@@ -28,7 +29,7 @@ def extract_vaild_path(imput_json):
     else:
         print("extracting the data.......\n")
 
-    output_lc08 = "/home/tq/data_pool/test_data/US_MT/valid_list_2018_MT.json"
+    output = "/home/tq/data_pool/test_data/valid_list_2018_USA.json"
 
     if not os.path.exists(imput_json):
         print("%s file path does not exist!\n" % imput_json)
@@ -43,28 +44,47 @@ def extract_vaild_path(imput_json):
             process_dict = json.load(fp)
 
         # extra path to list and remove cloudiness more than 80%
-        valid_list_2017_Anhui_lc08 = []
+        valid_list = []
         for tmp_data in process_dict["scenes"]:
             if tmp_data["cloud_perc"] <= 80:
-                print(tmp_data["relative_path"] + "add to the list LC08")
-                valid_list_2017_Anhui_lc08.append(tmp_data["relative_path"])
+                print(tmp_data["relative_path"] + "add to the list")
+                valid_list.append(tmp_data["relative_path"])
             else:
                 print(tmp_data["relative_path"] + "cloudiness more than 80%")
                 continue
 
         # sort the list
-        valid_list_2017_Anhui_lc08.sort()
+        valid_list.sort()
 
-        if len(valid_list_2017_Anhui_lc08) > 0:
-            with open(output_lc08, "w") as fp8:
-                json.dump(valid_list_2017_Anhui_lc08, fp8, ensure_ascii=False, indent=2)
-            print(
-                "Valid data total %s in %s"
-                % (len(valid_list_2017_Anhui_lc08), imput_json)
-            )
+        if len(valid_list) > 0:
+            with open(output, "w") as fp:
+                json.dump(valid_list, fp, ensure_ascii=False, indent=2)
+            print("Valid data total %s in %s" % (len(valid_list), imput_json))
         else:
-            print("LC08 is no data in %s" % imput_json)
+            print("no data in %s" % imput_json)
     return 1
+
+
+def extract_corp_pr() -> str:
+    """
+        extract crop mask pr
+    """
+    index_list = []  # only save the corn belt
+
+    # load the index 0f corn belt
+    xls_file = "/home/tq/workspace/super-octo-bassoon/Cropmask_landsat.xlsx"
+    book = xlrd.open_workbook(xls_file)
+    sheet1 = book.sheet_by_name("Sheet1")
+    index_tmp = sheet1.col_values(7)
+    index_list = index_tmp[1:]
+    index_list = [
+        "{:0>6}".format(int(pr)) for pr in index_list
+    ]  # 26034.0 convert to '026034'
+    print(index_list)
+    del (book)
+    del (sheet1)
+    gc.collect()
+    return index_list
 
 
 def extract_list():
@@ -73,35 +93,39 @@ def extract_list():
     """
 
     # set the root path
-    json_list7 = glob.glob("/home/tq/data_pool/test_data/US_MT/valid_list_*.json")
+    json_l = "/home/tq/data_pool/test_data/valid_list_2018_USA.json"
 
     # find the file landsat
     process_list = []
-    for tmp in json_list7:
-        with open(tmp, "r") as fp:
-            process_tmp = json.load(fp)
-            process_list.extend(process_tmp)
-
-    # find the file landsat 5
-    # with open(tmp, 'r') as fp:
-    #             process_tmp = json.load(fp)
-    #             process_list.extend(process_tmp)
-
+    with open(json_l, "r") as fp:
+        process_list = json.load(fp)
     print(len(process_list))
 
+    # find the path in pr
+    process_list_pr = []
+    for tmp in process_list:
+        tmp_pr = "".join(tmp.split("/")[4:6])
+
+        if tmp_pr in pr:
+            print(tmp_pr)
+            process_list_pr.append(tmp)
+        else:
+            print("no in crop mask!")
+            continue
+
     # find the file
-    valid_list_data2 = [pl for pl in process_list if "data2" in pl]
-    valid_list_tq01 = [pl for pl in process_list if "tq-data01" in pl]
-    valid_list_tq02 = [pl for pl in process_list if "tq-data02" in pl]
-    valid_list_tq03 = [pl for pl in process_list if "tq-data03" in pl]
-    valid_list_tq04 = [pl for pl in process_list if "tq-data04" in pl]
+    valid_list_data2 = [pl for pl in process_list_pr if "data2" in pl]
+    valid_list_tq01 = [pl for pl in process_list_pr if "tq-data01" in pl]
+    valid_list_tq02 = [pl for pl in process_list_pr if "tq-data02" in pl]
+    valid_list_tq03 = [pl for pl in process_list_pr if "tq-data03" in pl]
+    valid_list_tq04 = [pl for pl in process_list_pr if "tq-data04" in pl]
 
     # save the file
-    out_data2 = "/home/tq/data_pool/test_data/US_MT/valid_list_MT_data2.json"
-    out_tq1 = "/home/tq/data_pool/test_data/US_MT/valid_list_MT_tq1.json"
-    out_tq2 = "/home/tq/data_pool/test_data/US_MT/valid_list_MT_tq2.json"
-    out_tq3 = "/home/tq/data_pool/test_data/US_MT/valid_list_MT_tq3.json"
-    out_tq4 = "/home/tq/data_pool/test_data/US_MT/valid_list_MT_tq4.json"
+    out_data2 = "/home/tq/data_pool/test_data/US/valid_list_data2.json"
+    out_tq1 = "/home/tq/data_pool/test_data/US/valid_list_tq1.json"
+    out_tq2 = "/home/tq/data_pool/test_data/US/valid_list_tq2.json"
+    out_tq3 = "/home/tq/data_pool/test_data/US/valid_list_tq3.json"
+    out_tq4 = "/home/tq/data_pool/test_data/US/valid_list_tq4.json"
 
     with open(out_data2, "w") as fp8:
         json.dump(valid_list_data2, fp8, ensure_ascii=False, indent=2)
@@ -126,8 +150,10 @@ def extract_list():
 
 if __name__ == "__main__":
     start = time.time()
-    imput_json = "/home/tq/data_pool/test_data/US_MT/2018-LE07-LC08-2018-USA-MT.json"
+    imput_json = "/home/tq/data_pool/test_data/LE07-LC08-2018-0401-0801-USA.json"
+    pr = extract_corp_pr()
     extract_list()
     # extract_vaild_path(imput_json)
+
     end = time.time()
     print("Task runs %0.2f seconds" % (end - start))
