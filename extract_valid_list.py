@@ -29,7 +29,7 @@ def extract_vaild_path(imput_json):
     else:
         print("extracting the data.......\n")
 
-    output = "/home/tq/data_pool/test_data/valid_list_2018_USA.json"
+    output = "/home/tq/data_pool/test_data/valid_list_2018_USA_95.json"
 
     if not os.path.exists(imput_json):
         print("%s file path does not exist!\n" % imput_json)
@@ -46,7 +46,7 @@ def extract_vaild_path(imput_json):
         # extra path to list and remove cloudiness more than 80%
         valid_list = []
         for tmp_data in process_dict["scenes"]:
-            if tmp_data["cloud_perc"] <= 80:
+            if tmp_data["cloud_perc"] <= 95:
                 print(tmp_data["relative_path"] + "add to the list")
                 valid_list.append(tmp_data["relative_path"])
             else:
@@ -93,7 +93,7 @@ def extract_list():
     """
 
     # set the root path
-    json_l = "/home/tq/data_pool/test_data/valid_list_2018_USA.json"
+    json_l = "/home/tq/data_pool/test_data/valid_list_2018_USA_95.json"
 
     # find the file landsat
     process_list = []
@@ -122,10 +122,10 @@ def extract_list():
 
     # save the file
     out_data2 = "/home/tq/data_pool/test_data/US/valid_list_data2.json"
-    out_tq1 = "/home/tq/data_pool/test_data/US/valid_list_tq1.json"
-    out_tq2 = "/home/tq/data_pool/test_data/US/valid_list_tq2.json"
-    out_tq3 = "/home/tq/data_pool/test_data/US/valid_list_tq3.json"
-    out_tq4 = "/home/tq/data_pool/test_data/US/valid_list_tq4.json"
+    out_tq1 = "/home/tq/data_pool/test_data/US/valid_list_tq1_95.json"
+    out_tq2 = "/home/tq/data_pool/test_data/US/valid_list_tq2_95.json"
+    out_tq3 = "/home/tq/data_pool/test_data/US/valid_list_tq3_95.json"
+    out_tq4 = "/home/tq/data_pool/test_data/US/valid_list_tq4_95.json"
 
     with open(out_data2, "w") as fp8:
         json.dump(valid_list_data2, fp8, ensure_ascii=False, indent=2)
