@@ -9,8 +9,8 @@ def find_new_raw():
        find the error data
     """
 
-    landsat = glob.glob("/home/tq/*/landsat/*/01/038/032/*")
-    landsat += glob.glob("/home/tq/*/landsat/*/01/032/036/*")
+    landsat = glob.glob("/home/tq/*/landsat/*/01/117/027/*")
+    landsat += glob.glob("/home/tq/*/landsat/*/01/124/036/*")
 
     landsat_T = [
         f
@@ -30,15 +30,27 @@ def find_new_raw():
     ]
 
     # extract the process list\
-    result_json = "/home/tq/data_pool/test_data/new_landsat_20180814.json"
+    result_json = "/home/tq/data_pool/test_data/china_test.json"
     with open(result_json, "w") as fp:
         json.dump(landsat_T, fp, ensure_ascii=False, indent=2)
     print("Valid data total %s" % len(landsat_T))
 
 
+def find_new_result():
+    landsat = glob.glob("/home/tq/*/landsat_sr/*/01/117/027/*")
+    landsat += glob.glob("/home/tq/*/landsat_sr/*/01/124/036/*")
+    landsat = sorted(landsat)
+
+    # extract the process list
+    result_json = "/home/tq/data_pool/test_data/china_test_result.json"
+    with open(result_json, "w") as fp:
+        json.dump(landsat, fp, ensure_ascii=False, indent=2)
+    print("Valid data total %s" % len(landsat))
+
+
 if __name__ == "__main__":
 
     start = time.time()
-    find_new_raw()
+    find_new_result()
     end = time.time()
     print("Task runs %0.2f seconds" % (end - start))

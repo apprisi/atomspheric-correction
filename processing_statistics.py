@@ -58,18 +58,18 @@ def processing_statistics():
     print('Sucess: %d ' % len(processed_list_sucess))
 
     # save the list
-    file_sucess = '/home/tq/data_pool/test_data/landsat_20180811/processed_list_sucess.txt'
+    file_sucess = '/home/tq/data_pool/test_data/landsat_20180825/processed_list_sucess.txt'
     with open(file_sucess, 'w') as fp:
          fp.write(str(processed_list_sucess) + '\n')
 
-    file_fail = '/home/tq/data_pool/test_data/landsat_20180811/processed_list_fail.txt'
+    file_fail = '/home/tq/data_pool/test_data/landsat_20180825/processed_list_fail.txt'
     with open(file_fail, 'w') as fp:
          fp.write(str(processed_list_fail) + '\n')
 
     # print total
     star40 = '*'*75
     time_stamp = datetime.datetime.now()
-    f = open('/home/tq/data_pool/test_data/landsat_20180811/process_log.txt', 'a')
+    f = open('/home/tq/data_pool/test_data/landsat_20180825/process_log.txt', 'a')
     print("%s\n*  Total data: 85000, Total processed:%d, Processing Percentage:%.2f  *\n%s" %
          (star40, len(processed_list), 100*len(processed_list)/85000, star40))
 
@@ -105,7 +105,7 @@ def processing_statistics():
     print("%s" % star18)
     
     # save the process
-    file_name = '/home/tq/data_pool/test_data/landsat_20180811/processed_list.json'
+    file_name = '/home/tq/data_pool/test_data/landsat_20180825/processed_list.json'
     with open(file_name, 'w') as fp:
         json.dump(sr_status, fp, ensure_ascii=False, indent=4)  
 
